@@ -1,0 +1,148 @@
+.shell {
+  padding-block: 36px 70px;
+}
+.shell h1 {
+  font-size: clamp(27px, 4vw, 39px);
+  margin: 12px 0;
+}
+.muted {
+  font-size: 12px;
+  color: #a5afbd;
+  line-height: 1.9;
+}
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 25px;
+  margin-top: 28px;
+}
+.panel {
+  padding: 26px;
+  border: 1px solid var(--line);
+  background: #181c23;
+  border-radius: 10px;
+  min-width: 0;
+}
+.panel h2 {
+  font-size: 22px;
+  margin: 0 0 20px;
+}
+.panel h3 {
+  font-size: 21px;
+  line-height: 1.6;
+}
+.form {
+  display: grid;
+  gap: 15px;
+}
+.form label {
+  display: grid;
+  gap: 10px;
+  font-size: 12px;
+}
+.form input {
+  width: 100%;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #536075;
+  border-radius: 6px;
+  color: white;
+  background: #202733;
+  font-family: monospace;
+}
+.panel button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.reader {
+  margin-top: 25px;
+  border-top: 1px solid var(--line);
+  padding-top: 22px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+.file {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: #bdc6d4;
+}
+.file input {
+  font-size: 10px;
+  max-width: 220px;
+}
+.video {
+  margin-top: 20px;
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  background: #000;
+  border-radius: 7px;
+}
+.details {
+  font-size: 12px;
+}
+.details > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.details dt {
+  color: var(--muted);
+}
+.details dd {
+  margin: 0;
+  max-width: 65%;
+  text-align: right;
+  line-height: 1.8;
+}
+.seat {
+  font-size: 26px;
+  color: var(--gold);
+}
+.error,
+.warning {
+  font-size: 12px;
+  padding: 13px;
+  background: #392b21;
+  border: 1px solid #85603d;
+  color: #efc9a1;
+  border-radius: 6px;
+  line-height: 1.8;
+}
+.error {
+  background: #37221f;
+  border-color: #815044;
+  color: #f0bdb0;
+}
+.success {
+  background: #1f3529;
+  border: 1px solid #497255;
+  border-radius: 6px;
+  padding: 13px;
+  color: #b4ddbf;
+  font-size: 13px;
+  line-height: 1.8;
+}
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .panel {
+    padding: 18px;
+  }
+  .details > div {
+    gap: 10px;
+  }
+  .details dd {
+    max-width: 60%;
+  }
+}

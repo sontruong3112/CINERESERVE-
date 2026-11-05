@@ -1,0 +1,161 @@
+.shell {
+  width: min(470px, calc(100% - 40px));
+  margin: 60px auto;
+}
+.wide {
+  width: min(800px, calc(100% - 40px));
+  margin: 55px auto;
+}
+.panel {
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.panel h1 {
+  font-size: 28px;
+  letter-spacing: -0.8px;
+  font-weight: 600;
+  margin: 12px 0;
+}
+.panel h2 {
+  font-size: 20px;
+  font-weight: 550;
+}
+.description {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.9;
+  margin-bottom: 25px;
+}
+.form {
+  display: grid;
+  gap: 20px;
+}
+.field {
+  display: grid;
+  gap: 9px;
+}
+.form label {
+  display: grid;
+  gap: 9px;
+  font-size: 12px;
+  color: #dbd8d0;
+}
+.form input {
+  width: 100%;
+  background: var(--bg);
+  color: white;
+  border: 1px solid #ffffff22;
+  border-radius: 6px;
+  padding: 13px;
+  font-size: 14px;
+  min-width: 0;
+}
+.password {
+  position: relative;
+}
+.password input {
+  padding-right: 45px;
+}
+.password button {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  padding: 3px;
+  background: none;
+  color: var(--muted);
+  border: none;
+}
+.error {
+  border: 1px solid #e48a7c66;
+  background: #7e292320;
+  color: #ffb4a9;
+  font-size: 12px;
+  padding: 13px;
+  border-radius: 5px;
+  line-height: 1.8;
+}
+.success {
+  color: #a7d4b8;
+  font-size: 13px;
+  padding: 12px 0;
+}
+.switch {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 25px;
+  text-align: center;
+  line-height: 1.9;
+}
+.switch a {
+  color: var(--gold);
+}
+.icon {
+  color: var(--gold);
+}
+.links {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 22px 0;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 25px 0;
+}
+.stat {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 10px;
+  font-size: 12px;
+}
+.stat strong {
+  color: var(--gold);
+  font-size: 27px;
+}
+.list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.badge {
+  font-size: 10px;
+  color: var(--gold);
+  letter-spacing: 1px;
+}
+@media (max-width: 600px) {
+  .panel input, .panel select { font-size: 16px; min-height: 48px; }
+  .password button { top: 2px; right: 2px; min-width: 44px; min-height: 44px; }
+  .shell,
+  .wide {
+    margin-top: 35px;
+  }
+  .panel {
+    padding: 23px;
+  }
+  .panel h1 {
+    font-size: 25px;
+  }
+  .stats {
+    grid-template-columns: 1fr;
+  }
+  .list li {
+    flex-direction: column;
+    gap: 5px;
+  }
+}

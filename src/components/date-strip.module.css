@@ -1,0 +1,11 @@
+.shell { min-width: 0; margin: 24px 0 20px; }
+.heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; font-size: 12px; color: var(--muted); }
+.arrows { display: flex; gap: 6px; }
+.arrows button { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--text); }
+.arrows button:disabled { opacity: .3; }
+.track { display: flex; gap: 10px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: thin; scrollbar-color: #70644b transparent; padding: 5px 3px 12px; }
+.track a { display: grid; gap: 7px; text-align: center; flex: 0 0 88px; padding: 13px 10px; border: 1px solid var(--line); border-radius: 8px; scroll-snap-align: start; }
+.track a span { font-size: 12px; opacity: .8; }
+.track a strong { font-size: 17px; font-weight: 600; }
+.track a[aria-current] { background: var(--gold); color: #151515; border-color: var(--gold); }
+.track a:hover { border-color: var(--gold); }

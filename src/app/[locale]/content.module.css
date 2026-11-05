@@ -1,0 +1,365 @@
+.intro {
+  padding-top: 42px;
+  padding-bottom: 26px;
+}
+.intro h1 {
+  font-size: clamp(30px, 3.5vw, 46px);
+  font-weight: 600;
+  letter-spacing: -1.5px;
+  line-height: 1.3;
+  margin: 0 0 18px;
+}
+.intro > p:not(:first-child) {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.9;
+  max-width: 650px;
+}
+.filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+}
+.filters input[type="date"] {
+  color-scheme: dark;
+}
+.filters label {
+  display: grid;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.filters input,
+.filters select {
+  background: var(--bg);
+  border: 1px solid #ffffff20;
+  border-radius: 8px;
+  color: var(--text);
+  padding: 12px;
+  width: 100%;
+  min-width: 0;
+  font-size: 13px;
+  min-height: 46px;
+}
+.filters button {
+  align-self: end;
+}
+.resultHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 28px 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+.resultHead a {
+  color: var(--gold);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 37px 26px;
+}
+.empty {
+  padding: 80px 20px;
+  text-align: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+.empty svg {
+  color: var(--gold);
+}
+.empty h2 {
+  font-size: 22px;
+}
+.empty p {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 25px;
+}
+.detailHero {
+  position: relative;
+  isolation: isolate;
+  padding: 28px 0 44px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+.backdrop {
+  object-fit: cover;
+  z-index: -3;
+  opacity: 0.23;
+}
+.detailHero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    linear-gradient(0deg, var(--bg), #10111466),
+    linear-gradient(90deg, var(--bg), transparent);
+}
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #bdc0c4;
+  font-size: 11px;
+  margin-bottom: 35px;
+}
+.detailGrid {
+  display: grid;
+  grid-template-columns: 215px 1fr;
+  gap: 40px;
+  align-items: center;
+}
+.detailPoster {
+  position: relative;
+  aspect-ratio: 2/3;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 18px 50px #0006;
+}
+.detailGrid h1 {
+  font-size: clamp(28px, 3vw, 43px);
+  letter-spacing: -1.4px;
+  line-height: 1.3;
+  margin: 13px 0;
+  font-weight: 600;
+}
+.detailMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  font-size: 12px;
+  color: #c2c0ba;
+}
+.detailMeta span {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.rating {
+  background: #e2b96e;
+  color: #111;
+  padding: 4px 7px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.synopsis {
+  color: #adb1b5;
+  font-size: 13px;
+  line-height: 2;
+  max-width: 700px;
+  margin: 25px 0;
+}
+.facts {
+  display: flex;
+  gap: 36px;
+  font-size: 11px;
+  margin-bottom: 25px;
+}
+.facts dt {
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.facts dd {
+  margin: 0;
+  color: #d5d3cd;
+}
+.schedule {
+  padding-top: 36px;
+}
+.schedule h2 {
+  font-size: 27px;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+.scheduleNote {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.9;
+  max-width: 720px;
+}
+.cinemaChoices a:hover {
+  border-color: var(--gold);
+}
+.cinemaChoices a:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 3px;
+}
+.cinemaChoices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 26px;
+}
+.cinemaChoices a {
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 11px 18px;
+  font-size: 12px;
+  transition:
+    border-color 0.15s,
+    background 0.15s;
+}
+.cinemaChoices a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.cinemaChoices a[aria-current] {
+  background: #edc07618;
+  color: var(--gold);
+  border-color: var(--gold);
+}
+.cinemaBlock {
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+.cinemaBlock h3 {
+  font-size: 16px;
+  margin: 0 0 10px;
+}
+.cinemaBlock p {
+  color: var(--muted);
+  font-size: 11px;
+}
+.sessions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+.cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+}
+.cinemaCard {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 30px;
+  border: 1px solid var(--line);
+}
+.cinemaCard > svg {
+  color: var(--gold);
+  margin-bottom: 20px;
+}
+.cinemaCard h2 {
+  font-size: 24px;
+  font-weight: 500;
+}
+.cinemaCard p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.9;
+}
+.steps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.step {
+  padding: 25px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: var(--surface);
+}
+.step > span {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+.step h2 {
+  font-size: 20px;
+  font-weight: 500;
+}
+.step p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.9;
+}
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 30px 20px;
+  }
+  .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+  .detailGrid {
+    gap: 30px;
+    grid-template-columns: 200px 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .intro {
+    padding-top: 40px;
+  }
+  .intro h1 {
+    letter-spacing: -1px;
+    font-size: 31px;
+  }
+  .filters {
+    padding: 16px;
+    gap: 15px;
+    grid-template-columns: 1fr;
+  }
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 28px 16px;
+  }
+  .detailGrid {
+    grid-template-columns: 1fr;
+    gap: 25px;
+  }
+  .detailPoster {
+    width: 160px;
+  }
+  .detailGrid h1 {
+    font-size: 30px;
+  }
+  .detailHero {
+    padding-top: 25px;
+  }
+  .detailMeta {
+    gap: 12px;
+    font-size: 11px;
+  }
+  .facts {
+    gap: 22px;
+    flex-wrap: wrap;
+  }
+  .cards,
+  .steps {
+    grid-template-columns: 1fr;
+  }
+  .cinemaCard {
+    padding: 25px;
+  }
+  .resultHead {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 600px) {
+  .filters input,
+  .filters select {
+    font-size: 16px;
+    min-height: 48px;
+  }
+  .empty {
+    padding: 40px 16px;
+  }
+}
