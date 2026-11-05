@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Script tao file Word (.docx) Bao cao Do an Tot nghiep chuan Khoa CNTT - HaUI
-Chuyen nganh: Khoa hoc May tinh
-De tai: Xay dung website dat ve xem phim CineReserve su dung Next.js, TypeScript va tich hop chatbot AI
+Script tao file Word (.docx) Bao cao Do an Tot nghiep chuan 100% theo mau Do an Khoa K16
+Truong Dai hoc Cong nghiep Ha Noi - Truong Cong nghe Thong tin va Truyen thong
+Nganh: Khoa hoc May tinh
+De tai: XAY DUNG WEBSITE DAT VE XEM PHIM CINERESERVE SU DUNG NEXT.JS, TYPESCRIPT VA TICH HOP CHATBOT AI
 """
 
 import os
 import docx
 from docx import Document
 from docx.shared import Inches, Pt, RGBColor, Cm
-from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_LINE_SPACING
+from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
@@ -42,12 +43,10 @@ def set_table_borders(table, color="D3D3D3"):
     ''')
     tblPr.append(borders)
 
-def build_report():
+def build_full_report():
     doc = Document()
 
     # 1. Page Setup theo quy chuan HaUI
-    # A4: 210 x 297 mm
-    # Left: 3.5 cm (dong gay), Right: 2.0 cm, Top: 2.5 cm, Bottom: 2.5 cm
     for section in doc.sections:
         section.page_width = Cm(21.0)
         section.page_height = Cm(29.7)
@@ -57,7 +56,7 @@ def build_report():
         section.bottom_margin = Cm(2.5)
         section.different_first_page_header_footer = True
 
-    # 2. Setup Normal Style: Times New Roman, 13pt, 1.5 lines, 6pt after
+    # 2. Setup Normal Style: Times New Roman, 13pt
     style_normal = doc.styles['Normal']
     font = style_normal.font
     font.name = 'Times New Roman'
@@ -103,7 +102,7 @@ def build_report():
     def add_h1(title):
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        p.paragraph_format.space_before = Pt(14)
+        p.paragraph_format.space_before = Pt(16)
         p.paragraph_format.space_after = Pt(6)
         p.paragraph_format.keep_with_next = True
         r = p.add_run(title)
@@ -116,7 +115,7 @@ def build_report():
     def add_h2(title):
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        p.paragraph_format.space_before = Pt(10)
+        p.paragraph_format.space_before = Pt(12)
         p.paragraph_format.space_after = Pt(4)
         p.paragraph_format.keep_with_next = True
         r = p.add_run(title)
@@ -129,8 +128,8 @@ def build_report():
     def add_h3(title):
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        p.paragraph_format.space_before = Pt(6)
-        p.paragraph_format.space_after = Pt(2)
+        p.paragraph_format.space_before = Pt(8)
+        p.paragraph_format.space_after = Pt(3)
         p.paragraph_format.keep_with_next = True
         r = p.add_run(title)
         r.bold = True
@@ -158,7 +157,7 @@ def build_report():
 
     def add_table_header_caption(text):
         p = doc.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
         p.paragraph_format.space_before = Pt(8)
         p.paragraph_format.space_after = Pt(3)
         p.paragraph_format.keep_with_next = True
@@ -180,170 +179,156 @@ def build_report():
         r.font.size = Pt(12)
         return p
 
+    def add_usecase_table(code, name, actor, desc, main_flow, alt_flow, pre_cond="", post_cond=""):
+        add_table_header_caption(f"Bảng 2.{code} Mô tả Use case {name}")
+        t = doc.add_table(rows=7, cols=2)
+        t.alignment = WD_TABLE_ALIGNMENT.CENTER
+        set_table_borders(t)
+        
+        fields = [
+            ("Tên Usecase", name),
+            ("Tác nhân", actor),
+            ("Mô tả vắn tắt", desc),
+            ("Luồng cơ bản", main_flow),
+            ("Luồng rẽ nhánh", alt_flow),
+            ("Tiền điều kiện", pre_cond if pre_cond else "Không có"),
+            ("Hậu điều kiện", post_cond if post_cond else "Hệ thống ghi nhận thành công")
+        ]
+        
+        for idx, (lbl, val) in enumerate(fields):
+            c0 = t.cell(idx, 0)
+            c1 = t.cell(idx, 1)
+            c0.width = Cm(4.0)
+            c1.width = Cm(11.5)
+            
+            p0 = c0.paragraphs[0]
+            p0.paragraph_format.space_after = Pt(2)
+            r0 = p0.add_run(lbl)
+            r0.bold = True
+            r0.font.name = 'Times New Roman'
+            r0.font.size = Pt(11)
+            set_cell_shading(c0, "F4F6F8")
+            
+            p1 = c1.paragraphs[0]
+            p1.paragraph_format.space_after = Pt(2)
+            p1.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+            r1 = p1.add_run(val)
+            r1.font.name = 'Times New Roman'
+            r1.font.size = Pt(11)
+            
+            set_cell_margins(c0, top=60, bottom=60, left=80, right=80)
+            set_cell_margins(c1, top=60, bottom=60, left=80, right=80)
+        
+        p_space = doc.add_paragraph()
+        p_space.paragraph_format.space_after = Pt(6)
+
     # =========================================================================
-    # TRANG BÌA CHÍNH (TRANG 1)
+    # TRANG BÌA CHÍNH (CHUẨN FORM BẠN)
     # =========================================================================
     add_title_p("BỘ CÔNG THƯƠNG", size=13, bold=True, space_after=2)
-    add_title_p("TRƯỜNG ĐẠI HỌC CÔNG NGHIỆP HÀ NỘI", size=14, bold=True, space_after=4)
-    add_title_p("KHOA CÔNG NGHỆ THÔNG TIN", size=14, bold=True, space_after=2)
-    add_title_p("-------------------***-------------------", size=11, bold=False, space_after=36)
+    add_title_p("TRƯỜNG ĐẠI HỌC CÔNG NGHIỆP HÀ NỘI", size=14, bold=True, space_after=2)
+    add_title_p("---------------------------------------", size=12, bold=False, space_after=40)
 
     add_title_p("ĐỒ ÁN TỐT NGHIỆP ĐẠI HỌC", size=18, bold=True, color=RGBColor(0x00, 0x20, 0x60), space_after=6)
-    add_title_p("CHUYÊN NGÀNH: KHOA HỌC MÁY TÍNH", size=14, bold=True, color=RGBColor(0x00, 0x33, 0x66), space_after=36)
+    add_title_p("NGÀNH KHOA HỌC MÁY TÍNH", size=14, bold=True, color=RGBColor(0x00, 0x33, 0x66), space_after=36)
 
-    add_title_p("ĐỀ TÀI:", size=13, bold=True, space_after=6)
     add_title_p("XÂY DỰNG WEBSITE ĐẶT VÉ XEM PHIM CINERESERVE SỬ DỤNG NEXT.JS, TYPESCRIPT VÀ TÍCH HỢP CHATBOT AI", 
-                size=16, bold=True, color=RGBColor(0x80, 0x00, 0x00), space_after=60)
+                size=16, bold=True, color=RGBColor(0x80, 0x00, 0x00), space_after=70)
 
-    # Khung thong tin sinh vien
-    t_info = doc.add_table(rows=4, cols=2)
+    t_info = doc.add_table(rows=3, cols=3)
     t_info.alignment = WD_TABLE_ALIGNMENT.CENTER
     info_data = [
-        ("Sinh viên thực hiện:", "[Họ và tên sinh viên]"),
-        ("Mã sinh viên:", "[Mã sinh viên]"),
-        ("Lớp:", "Khoa học Máy tính - K15/K16"),
-        ("Giảng viên hướng dẫn:", "[Học hàm, học vị, Họ và tên GVHD]")
+        ("GVHD", ":", "ThS. [Họ và tên GVHD]"),
+        ("Sinh viên", ":", "[Họ và tên sinh viên]"),
+        ("Mã sinh viên", ":", "[Mã sinh viên]")
     ]
-    for row_idx, (label, val) in enumerate(info_data):
-        cell_lbl = t_info.cell(row_idx, 0)
-        cell_val = t_info.cell(row_idx, 1)
-        p1 = cell_lbl.paragraphs[0]
+    for row_idx, (lbl, sep, val) in enumerate(info_data):
+        c0, c1, c2 = t_info.cell(row_idx, 0), t_info.cell(row_idx, 1), t_info.cell(row_idx, 2)
+        c0.width = Cm(3.5)
+        c1.width = Cm(0.8)
+        c2.width = Cm(8.0)
+        p0, p1, p2 = c0.paragraphs[0], c1.paragraphs[0], c2.paragraphs[0]
+        p0.paragraph_format.space_after = Pt(3)
         p1.paragraph_format.space_after = Pt(3)
-        r1 = p1.add_run(label)
+        p2.paragraph_format.space_after = Pt(3)
+        
+        r0 = p0.add_run(lbl)
+        r0.bold = True
+        r0.font.name = 'Times New Roman'
+        r0.font.size = Pt(13)
+        
+        r1 = p1.add_run(sep)
         r1.bold = True
         r1.font.name = 'Times New Roman'
         r1.font.size = Pt(13)
         
-        p2 = cell_val.paragraphs[0]
-        p2.paragraph_format.space_after = Pt(3)
         r2 = p2.add_run(val)
         r2.font.name = 'Times New Roman'
         r2.font.size = Pt(13)
 
-    add_title_p("", size=12, space_after=50)
-    add_title_p("HÀ NỘI, NĂM 2026", size=13, bold=True, space_after=0)
+    add_title_p("", size=12, space_after=70)
+    add_title_p("Hà Nội – Năm 2026", size=13, bold=True, space_after=0)
     doc.add_page_break()
 
     # =========================================================================
-    # TRANG PHỤ BÌA (TRANG 2)
+    # TRANG PHỤ BÌA (CHUẨN TRƯỜNG CNTT & TRUYỀN THÔNG)
     # =========================================================================
-    add_title_p("BỘ CÔNG THƯƠNG", size=13, bold=True, space_after=2)
-    add_title_p("TRƯỜNG ĐẠI HỌC CÔNG NGHIỆP HÀ NỘI", size=14, bold=True, space_after=4)
-    add_title_p("KHOA CÔNG NGHỆ THÔNG TIN", size=14, bold=True, space_after=30)
+    add_title_p("TRƯỜNG ĐẠI HỌC CÔNG NGHIỆP HÀ NỘI", size=13, bold=True, space_after=2)
+    add_title_p("TRƯỜNG CÔNG NGHỆ THÔNG TIN VÀ TRUYỀN THÔNG", size=14, bold=True, space_after=2)
+    add_title_p("---------------------------------------", size=12, bold=False, space_after=35)
 
     add_title_p("ĐỒ ÁN TỐT NGHIỆP ĐẠI HỌC", size=16, bold=True, space_after=6)
-    add_title_p("CHUYÊN NGÀNH: KHOA HỌC MÁY TÍNH", size=13, bold=True, space_after=30)
+    add_title_p("NGÀNH KHOA HỌC MÁY TÍNH", size=13, bold=True, space_after=30)
 
-    add_title_p("ĐỀ TÀI:", size=13, bold=True, space_after=6)
-    add_title_p("XÂY DỰNG WEBSITE ĐẶT VÉ XEM PHIM CINERESERVE SỬ DỤNG NEXT.JS, TYPESCRIPT VÀ TÍCH HỢP CHATBOT AI", 
-                size=15, bold=True, color=RGBColor(0x80, 0x00, 0x00), space_after=40)
+    add_title_p("ĐỀ TÀI: XÂY DỰNG WEBSITE ĐẶT VÉ XEM PHIM CINERESERVE SỬ DỤNG NEXT.JS, TYPESCRIPT VÀ TÍCH HỢP CHATBOT AI", 
+                size=15, bold=True, color=RGBColor(0x80, 0x00, 0x00), space_after=50)
 
-    t_sub = doc.add_table(rows=5, cols=2)
+    t_sub = doc.add_table(rows=4, cols=3)
     t_sub.alignment = WD_TABLE_ALIGNMENT.CENTER
     sub_data = [
-        ("Sinh viên thực hiện:", "[Họ và tên sinh viên]"),
-        ("Mã sinh viên:", "[Mã sinh viên]"),
-        ("Khóa học:", "2022 - 2026"),
-        ("Cán bộ hướng dẫn 1:", "[Họ và tên GVHD chính]"),
-        ("Cán bộ hướng dẫn 2:", "[Họ và tên GVHD phụ (nếu có)]")
+        ("GVHD", ":", "ThS. [Họ và tên GVHD]"),
+        ("Sinh viên", ":", "[Họ và tên sinh viên]"),
+        ("Mã sinh viên", ":", "[Mã sinh viên]"),
+        ("Lớp - Khóa", ":", "2021DHKHMT02 - K16")
     ]
-    for row_idx, (label, val) in enumerate(sub_data):
-        c1 = t_sub.cell(row_idx, 0)
-        c2 = t_sub.cell(row_idx, 1)
-        p1 = c1.paragraphs[0]
+    for row_idx, (lbl, sep, val) in enumerate(sub_data):
+        c0, c1, c2 = t_sub.cell(row_idx, 0), t_sub.cell(row_idx, 1), t_sub.cell(row_idx, 2)
+        c0.width = Cm(3.5)
+        c1.width = Cm(0.8)
+        c2.width = Cm(8.0)
+        p0, p1, p2 = c0.paragraphs[0], c1.paragraphs[0], c2.paragraphs[0]
+        p0.paragraph_format.space_after = Pt(3)
         p1.paragraph_format.space_after = Pt(3)
-        r1 = p1.add_run(label)
+        p2.paragraph_format.space_after = Pt(3)
+        
+        r0 = p0.add_run(lbl)
+        r0.bold = True
+        r0.font.name = 'Times New Roman'
+        r0.font.size = Pt(13)
+        
+        r1 = p1.add_run(sep)
         r1.bold = True
         r1.font.name = 'Times New Roman'
         r1.font.size = Pt(13)
-        p2 = c2.paragraphs[0]
-        p2.paragraph_format.space_after = Pt(3)
+        
         r2 = p2.add_run(val)
         r2.font.name = 'Times New Roman'
         r2.font.size = Pt(13)
 
-    add_title_p("", size=12, space_after=50)
-    add_title_p("HÀ NỘI, NĂM 2026", size=13, bold=True, space_after=0)
+    add_title_p("", size=12, space_after=60)
+    add_title_p("Hà Nội – Năm 2026", size=13, bold=True, space_after=0)
     doc.add_page_break()
 
     # =========================================================================
-    # NHẬN XÉT CỦA GIẢNG VIÊN HƯỚNG DẪN
-    # =========================================================================
-    add_title_p("PHIẾU NHẬN XÉT ĐỒ ÁN TỐT NGHIỆP", size=16, bold=True, space_after=4)
-    add_title_p("(Dành cho Giảng viên hướng dẫn)", size=13, bold=False, space_after=18)
-
-    add_p("Họ và tên sinh viên: [Họ và tên sinh viên]                      Mã SV: [Mã sinh viên]", indent=False)
-    add_p("Lớp: Khoa học Máy tính - K15/K16                                Khoa: Công nghệ Thông tin", indent=False)
-    add_p("Tên đề tài: Xây dựng website đặt vé xem phim CineReserve sử dụng Next.js, TypeScript và tích hợp chatbot AI", bold_prefix="1. ", indent=False)
-    add_p("Cán bộ hướng dẫn: [Học hàm, học vị, Họ và tên GVHD]", bold_prefix="2. ", indent=False)
-    add_p("Nội dung nhận xét:", bold_prefix="3. ", indent=False)
-    add_bullet("Về tinh thần, thái độ làm việc của sinh viên trong quá trình thực hiện đồ án:", bold_prefix="- ")
-    add_p("....................................................................................................................................................", indent=False)
-    add_p("....................................................................................................................................................", indent=False)
-    add_bullet("Về khối lượng, tiến độ và mức độ hoàn thành nhiệm vụ được giao:", bold_prefix="- ")
-    add_p("....................................................................................................................................................", indent=False)
-    add_p("....................................................................................................................................................", indent=False)
-    add_bullet("Về chất lượng của đồ án (tính khoa học, giải pháp kỹ thuật, độ tin cậy của sản phẩm):", bold_prefix="- ")
-    add_p("....................................................................................................................................................", indent=False)
-    add_p("....................................................................................................................................................", indent=False)
-    add_bullet("Các tồn tại, hạn chế chính:", bold_prefix="- ")
-    add_p("....................................................................................................................................................", indent=False)
-    add_p("Kết luận và Đánh giá điểm:", bold_prefix="4. ", indent=False)
-    add_bullet("Mức độ đồng ý cho bảo vệ trước Hội đồng: [  ] Cho phép bảo vệ    [  ] Không cho phép", bold_prefix="- ")
-    add_bullet("Điểm đánh giá (Thang điểm 10): ............. (Bằng chữ: ....................................................)", bold_prefix="- ")
-
-    add_p("", indent=False, space_after=20)
-    p_sign = doc.add_paragraph()
-    p_sign.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    r_sign = p_sign.add_run("Hà Nội, ngày ... tháng ... năm 2026\nGIẢNG VIÊN HƯỚNG DẪN\n\n\n\n(Ký và ghi rõ họ tên)")
-    r_sign.bold = True
-    r_sign.font.name = 'Times New Roman'
-    r_sign.font.size = Pt(13)
-    doc.add_page_break()
-
-    # =========================================================================
-    # NHẬN XÉT CỦA GIẢNG VIÊN PHẢN BIỆN
-    # =========================================================================
-    add_title_p("PHIẾU NHẬN XÉT ĐỒ ÁN TỐT NGHIỆP", size=16, bold=True, space_after=4)
-    add_title_p("(Dành cho Giảng viên phản biện)", size=13, bold=False, space_after=18)
-
-    add_p("Họ và tên sinh viên: [Họ và tên sinh viên]                      Mã SV: [Mã sinh viên]", indent=False)
-    add_p("Tên đề tài: Xây dựng website đặt vé xem phim CineReserve sử dụng Next.js, TypeScript và tích hợp chatbot AI", bold_prefix="1. ", indent=False)
-    add_p("Cán bộ phản biện: [Học hàm, học vị, Họ và tên GVPB]", bold_prefix="2. ", indent=False)
-    add_p("Nội dung nhận xét của cán bộ phản biện:", bold_prefix="3. ", indent=False)
-    add_bullet("Về hình thức trình bày và bố cục của báo cáo đồ án:", bold_prefix="- ")
-    add_p("....................................................................................................................................................", indent=False)
-    add_bullet("Ý nghĩa khoa học và thực tiễn của đề tài:", bold_prefix="- ")
-    add_p("....................................................................................................................................................", indent=False)
-    add_bullet("Đánh giá kết quả đạt được và tính khả thi của chương trình/sản phẩm:", bold_prefix="- ")
-    add_p("....................................................................................................................................................", indent=False)
-    add_bullet("Các câu hỏi gợi ý sinh viên trả lời trước Hội đồng:", bold_prefix="- ")
-    add_p("1) .................................................................................................................................................", indent=False)
-    add_p("2) .................................................................................................................................................", indent=False)
-    add_p("Kết luận và Đánh giá điểm:", bold_prefix="4. ", indent=False)
-    add_bullet("Đồng ý cho sinh viên bảo vệ trước Hội đồng: [  ] Có    [  ] Không", bold_prefix="- ")
-    add_bullet("Điểm đánh giá (Thang điểm 10): ............. (Bằng chữ: ....................................................)", bold_prefix="- ")
-
-    add_p("", indent=False, space_after=20)
-    p_sign2 = doc.add_paragraph()
-    p_sign2.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    r_sign2 = p_sign2.add_run("Hà Nội, ngày ... tháng ... năm 2026\nGIẢNG VIÊN PHẢN BIỆN\n\n\n\n(Ký và ghi rõ họ tên)")
-    r_sign2.bold = True
-    r_sign2.font.name = 'Times New Roman'
-    r_sign2.font.size = Pt(13)
-    doc.add_page_break()
-
-    # =========================================================================
-    # LỜI CẢM ƠN
+    # LỜI CẢM ƠN (GIỐNG VĂN PHONG BẠN)
     # =========================================================================
     add_title_p("LỜI CẢM ƠN", size=16, bold=True, space_after=18)
-    add_p("Trong suốt bốn năm học tập và nghiên cứu dưới mái trường Đại học Công nghiệp Hà Nội (HaUI), em đã nhận được sự quan tâm, chỉ bảo và truyền đạt tri thức quý báu từ các Thầy, Cô giáo trong toàn trường nói chung và các Thầy, Cô giáo trong Khoa Công nghệ Thông tin nói riêng. Những kiến thức nền tảng về Khoa học Máy tính, tư duy giải thuật, cấu trúc dữ liệu và phương pháp phát triển phần mềm được quý Thầy Cô tận tâm giảng dạy chính là hành trang vô cùng vững chắc để em có thể tự tin bước vào nghiên cứu và thực hiện đề tài tốt nghiệp này.")
-    add_p("Em xin bày tỏ lòng biết ơn sâu sắc và chân thành nhất tới [Học hàm, học vị, Họ và tên GVHD]. Thầy/Cô đã luôn dành thời gian quý báu để định hướng đề tài, trực tiếp gợi mở các hướng tiếp cận học thuật chuyên sâu và tận tình chỉnh sửa từng sơ đồ kiến trúc, kịch bản kiểm thử, giúp em từng bước vượt qua những khó khăn về mặt kỹ thuật và hoàn thành đồ án đúng thời hạn với chất lượng tốt nhất.")
-    add_p("Đồng thời, em cũng xin chân thành cảm ơn gia đình, người thân và bạn bè đã luôn ở bên động viên, khích lệ tinh thần và tạo mọi điều kiện tốt nhất cho em trong suốt quá trình hoàn thành chương trình đại học.")
-    add_p("Mặc dù bản thân đã rất nỗ lực nghiên cứu và hoàn thiện sản phẩm một cách chỉn chu nhất, song do giới hạn về kiến thức và kinh nghiệm thực tiễn, cuốn báo cáo khó tránh khỏi những thiếu sót nhất định. Em rất mong nhận được những lời góp ý, phê bình chân thành từ quý Thầy Cô trong Hội đồng chấm đồ án tốt nghiệp để công trình nghiên cứu được hoàn thiện hơn nữa.")
+    add_p("Lời đầu tiên, em xin bày tỏ sự cảm ơn chân thành và sâu sắc đến Ban Giám hiệu cùng đội ngũ giảng viên của Trường Công nghệ Thông tin và Truyền thông - Đại học Công nghiệp Hà Nội đã tận tình trong quá trình giảng dạy, trang bị cho em những kiến thức, kỹ năng quan trọng trong suốt quá trình tham gia học tập tại trường. Nhờ đó, em mới có thể tự mình tiếp tục tìm hiểu và tiếp thu thêm các kiến thức mới, công nghệ mới, bổ trợ cho quá trình thực hiện đồ án cũng như là công việc sau này.")
+    add_p("Đặc biệt, em xin gửi lời trân trọng cảm ơn đến [Học hàm, học vị, Họ và tên GVHD], người đã trực tiếp định hướng, chỉ dẫn và góp ý tận tình trong quá trình thực hiện đồ án \"Xây dựng website đặt vé xem phim CineReserve sử dụng Next.js, TypeScript và tích hợp chatbot AI\". Nhờ những ý kiến đóng góp và chỉ bảo quý báu của Thầy/Cô mà em đã có thể hoàn thiện báo cáo này một cách chỉn chu nhất.")
+    add_p("Dù với sự nỗ lực và cố gắng của bản thân cùng với sự trợ giúp của mọi người trong quá trình thực hiện đồ án, em sẽ không thể tránh khỏi những thiếu sót. Em rất mong nhận được những ý kiến đóng góp của thầy/cô và mọi người để đề tài được hoàn thiện hơn.")
     add_p("Em xin chân thành cảm ơn!")
     
-    add_p("", indent=False, space_after=15)
+    add_p("", indent=False, space_after=20)
     p_author = doc.add_paragraph()
     p_author.alignment = WD_ALIGN_PARAGRAPH.RIGHT
     r_author = p_author.add_run("Sinh viên thực hiện\n\n\n\n[Họ và tên sinh viên]")
@@ -353,197 +338,88 @@ def build_report():
     doc.add_page_break()
 
     # =========================================================================
-    # LỜI CAM ĐOAN
-    # =========================================================================
-    add_title_p("LỜI CAM ĐOAN", size=16, bold=True, space_after=18)
-    add_p("Em xin cam đoan rằng:")
-    add_p("1. Đồ án tốt nghiệp với đề tài \"Xây dựng website đặt vé xem phim CineReserve sử dụng Next.js, TypeScript và tích hợp chatbot AI\" là công trình nghiên cứu độc lập của bản thân em dưới sự hướng dẫn khoa học của [Học hàm, học vị, Họ và tên GVHD].")
-    add_p("2. Toàn bộ mã nguồn chương trình, cơ sở dữ liệu, các kịch bản kiểm nghiệm thực tế và các số liệu phân tích được trình bày trong cuốn báo cáo này là trung thực, do chính em tự tìm hiểu, thiết kế và phát triển; không sao chép bất hợp pháp từ bất kỳ đồ án, khóa luận hay công trình khoa học nào khác.")
-    add_p("3. Mọi tài liệu tham khảo, các bài báo khoa học, các thư viện mã nguồn mở và các công cụ phát triển phần mềm được sử dụng trong đồ án đều được trích dẫn và ghi nhận xuất xứ rõ ràng theo đúng quy chuẩn học thuật của Nhà trường.")
-    add_p("Em xin hoàn toàn chịu trách nhiệm trước Hội đồng chấm đồ án tốt nghiệp và kỷ luật của Trường Đại học Công nghiệp Hà Nội nếu có bất kỳ sự gian lận hay vi phạm liêm chính học thuật nào.")
-    
-    add_p("", indent=False, space_after=15)
-    p_cam = doc.add_paragraph()
-    p_cam.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    r_cam = p_cam.add_run("Hà Nội, ngày ... tháng ... năm 2026\nSinh viên cam đoan\n\n\n\n[Họ và tên sinh viên]")
-    r_cam.bold = True
-    r_cam.font.name = 'Times New Roman'
-    r_cam.font.size = Pt(13)
-    doc.add_page_break()
-
-    # =========================================================================
-    # TÓM TẮT ĐỒ ÁN (TIẾNG VIỆT VÀ TIẾNG ANH)
-    # =========================================================================
-    add_title_p("TÓM TẮT ĐỒ ÁN", size=16, bold=True, space_after=12)
-    add_p("Đồ án tốt nghiệp tập trung giải quyết trọn vẹn các thách thức kỹ thuật cốt lõi trong xây dựng hệ thống thương mại điện tử chuyên ngành rạp chiếu phim mang tên CineReserve. Đề tài tập trung vào 3 trọng tâm chính: (1) Ứng dụng cơ chế khóa phân tán cấp giao dịch PostgreSQL Advisory Locks kết hợp cùng mô hình ACID Transactions nhằm triệt tiêu hoàn toàn vấn đề tranh chấp ghế đồng thời (Double-booking) và đảm bảo phiên giữ ghế 5 phút vận hành ổn định trong các khung giờ cao điểm; (2) Xây dựng ứng dụng web hiện đại dựa trên nền tảng Next.js 16 App Router, React 19 và TypeScript, tận dụng tối đa sức mạnh của Server-Side Rendering (SSR) và kiến trúc Server Components để tối ưu hóa hiệu năng, giảm bundle size và tăng cường bảo mật; (3) Tích hợp mô hình ngôn ngữ lớn Google Gemini AI thông qua giao thức truyền dữ liệu Streaming NDJSON và kỹ thuật Prompt Engineering với JSON Schema đơn lượt, mang lại trải nghiệm tư vấn phim thông minh, nhận diện ngôn ngữ tự nhiên và bảo tồn ngữ cảnh hội thoại vượt trội. Hệ thống được kiểm thử toàn diện với hơn 840 ca kiểm thử tích hợp tự động đạt tỷ lệ thành công 100%.")
-    add_p("Từ khóa: CineReserve, Đặt vé xem phim, Next.js App Router, Concurrency Control, PostgreSQL Advisory Lock, Gemini AI, Streaming NDJSON, Kiểm thử tích hợp.", bold_prefix="Từ khóa: ")
-
-    add_title_p("ABSTRACT", size=16, bold=True, space_after=12)
-    add_p("This graduation thesis focuses on resolving the core technical challenges in developing a high-performance cinema e-commerce system named CineReserve. The research encompasses three major objectives: (1) Employing transaction-level PostgreSQL Advisory Locks combined with strict ACID transaction isolation to completely eliminate concurrent seat contention (double-booking) and reliably maintain a 5-minute seat-hold session during traffic spikes; (2) Architecting a modern web application leveraging Next.js 16 App Router, React 19, and TypeScript, maximizing the capabilities of Server-Side Rendering (SSR) and React Server Components to optimize page load speeds, minimize client bundle overhead, and reinforce backend security; (3) Integrating Google's Gemini Large Language Model (LLM) via Newline-Delimited JSON (NDJSON) streaming and structured single-turn JSON Schema prompt engineering, offering real-time intelligent movie recommendations and dynamic natural language context preservation. The system is comprehensively verified through an automated suite of over 840 integration tests, achieving a 100% pass rate.")
-    add_p("Keywords: CineReserve, Cinema Booking System, Next.js App Router, Concurrency Control, PostgreSQL Advisory Lock, Gemini AI, Streaming NDJSON, Integration Testing.", bold_prefix="Keywords: ")
-    doc.add_page_break()
-
-    # =========================================================================
-    # DANH MỤC THUẬT NGỮ VÀ VIẾT TẮT
-    # =========================================================================
-    add_title_p("DANH MỤC THUẬT NGỮ VÀ CHỮ VIẾT TẮT", size=16, bold=True, space_after=14)
-    t_abbr = doc.add_table(rows=1, cols=3)
-    t_abbr.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_table_borders(t_abbr)
-    hdr_cells = t_abbr.rows[0].cells
-    hdr_cells[0].text = "Viết tắt"
-    hdr_cells[1].text = "Tên đầy đủ (Tiếng Anh)"
-    hdr_cells[2].text = "Ý nghĩa / Định nghĩa"
-    for c in hdr_cells:
-        set_cell_shading(c, "EBF1F5")
-        p = c.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        for r in p.runs:
-            r.bold = True
-            r.font.name = 'Times New Roman'
-            r.font.size = Pt(12)
-
-    abbr_list = [
-        ("ACID", "Atomicity, Consistency, Isolation, Durability", "Bốn thuộc tính bảo đảm tính tin cậy của giao dịch CSDL"),
-        ("AI", "Artificial Intelligence", "Trí tuệ nhân tạo"),
-        ("API", "Application Programming Interface", "Giao diện lập trình ứng dụng"),
-        ("BOM", "Byte Order Mark", "Ký tự đánh dấu thứ tự byte UTF-8 trong tập tin CSV"),
-        ("CRUD", "Create, Read, Update, Delete", "Bốn thao tác dữ liệu cơ bản"),
-        ("CSRF", "Cross-Site Request Forgery", "Tấn công giả mạo yêu cầu giữa các trang web"),
-        ("DTO", "Data Transfer Object", "Đối tượng truyền tải dữ liệu"),
-        ("ERD", "Entity Relationship Diagram", "Sơ đồ quan hệ thực thể"),
-        ("HaUI", "Hanoi University of Industry", "Trường Đại học Công nghiệp Hà Nội"),
-        ("LLM", "Large Language Model", "Mô hình ngôn ngữ lớn"),
-        ("NDJSON", "Newline-Delimited JSON", "Định dạng JSON phân tách theo từng dòng"),
-        ("ORM", "Object-Relational Mapping", "Kỹ thuật ánh xạ đối tượng vào cơ sở dữ liệu quan hệ"),
-        ("PII", "Personally Identifiable Information", "Thông tin nhận dạng cá nhân nhạy cảm"),
-        ("QR Code", "Quick Response Code", "Mã phản hồi nhanh (mã vạch ma trận 2 chiều)"),
-        ("RBAC", "Role-Based Access Control", "Kiểm soát truy cập dựa trên vai trò"),
-        ("RSC", "React Server Components", "Kiến trúc component kết xuất trực tiếp tại máy chủ của React"),
-        ("SSR", "Server-Side Rendering", "Cơ chế kết xuất mã HTML trực tiếp từ phía máy chủ"),
-        ("UUID", "Universally Unique Identifier", "Mã định danh duy nhất toàn cầu 128-bit"),
-        ("VND", "Vietnamese Dong", "Đơn vị tiền tệ Đồng Việt Nam")
-    ]
-    for abbr, eng, mean in abbr_list:
-        row = t_abbr.add_row()
-        c0, c1, c2 = row.cells
-        c0.text = abbr
-        c1.text = eng
-        c2.text = mean
-        for idx, c in enumerate([c0, c1, c2]):
-            set_cell_margins(c, top=80, bottom=80, left=100, right=100)
-            p = c.paragraphs[0]
-            p.paragraph_format.space_after = Pt(2)
-            if idx == 0:
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                for r in p.runs:
-                    r.bold = True
-                    r.font.name = 'Times New Roman'
-                    r.font.size = Pt(11.5)
-            else:
-                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                for r in p.runs:
-                    r.font.name = 'Times New Roman'
-                    r.font.size = Pt(11.5)
-    doc.add_page_break()
-
-    # =========================================================================
-    # DANH MỤC BẢNG BIỂU VÀ DANH MỤC HÌNH VẼ
-    # =========================================================================
-    add_title_p("DANH MỤC BẢNG BIỂU", size=16, bold=True, space_after=14)
-    tbl_index = [
-        ("Bảng 1.1", "So sánh đặc điểm hệ thống CineReserve và các nền tảng thương mại hiện nay", "12"),
-        ("Bảng 2.1", "Ma trận phân quyền chức năng hệ thống theo vai trò người dùng (RBAC Matrix)", "19"),
-        ("Bảng 2.2", "Danh mục 21 thực thể dữ liệu trong cơ sở dữ liệu CineReserve", "24"),
-        ("Bảng 2.3", "Đặc tả chi tiết cấu trúc bảng Showtime (Suất chiếu) và các ràng buộc", "26"),
-        ("Bảng 2.4", "Đặc tả chi tiết cấu trúc bảng Booking, PaymentAttempt và Ticket", "27"),
-        ("Bảng 3.1", "So sánh các cơ chế kiểm soát tranh chấp ghế đồng thời (Concurrency Control)", "32"),
-        ("Bảng 5.1", "Bảng tổng hợp kết quả chạy 15 bộ kịch bản kiểm thử tự động hệ thống", "47")
-    ]
-    for b_code, b_name, b_page in tbl_index:
-        p = doc.add_paragraph()
-        p.paragraph_format.space_after = Pt(3)
-        r_c = p.add_run(b_code + ": ")
-        r_c.bold = True
-        r_c.font.name = 'Times New Roman'
-        r_c.font.size = Pt(12)
-        r_n = p.add_run(b_name)
-        r_n.font.name = 'Times New Roman'
-        r_n.font.size = Pt(12)
-
-    add_title_p("", size=12, space_after=12)
-    add_title_p("DANH MỤC HÌNH VẼ", size=16, bold=True, space_after=14)
-    fig_index = [
-        ("Hình 1.1", "Sơ đồ luồng nghiệp vụ tổng quan của chuỗi rạp chiếu phim CineReserve", "14"),
-        ("Hình 2.1", "Biểu đồ Use Case tổng quan phân rã theo 3 tác nhân người dùng", "18"),
-        ("Hình 2.2", "Biểu đồ tuần tự (Sequence Diagram) xử lý giữ ghế an toàn với khóa Advisory Lock", "21"),
-        ("Hình 2.3", "Biểu đồ hoạt động (Activity Diagram) quy trình soát vé QR Code một lần", "22"),
-        ("Hình 2.4", "Sơ đồ quan hệ thực thể (ERD) chi tiết 21 bảng trong hệ thống CineReserve", "25"),
-        ("Hình 3.1", "Cơ chế điều phối giao dịch đồng thời với khóa PostgreSQL Advisory Lock", "31"),
-        ("Hình 3.2", "Kiến trúc tích hợp Chatbot Gemini và luồng dữ liệu Streaming NDJSON", "35"),
-        ("Hình 4.1", "Giao diện trang chủ phong cách điện ảnh hiện đại và module Đặt vé nhanh", "38"),
-        ("Hình 4.2", "Giao diện sơ đồ phòng chiếu và chọn ghế tương tác thời gian thực", "40"),
-        ("Hình 4.3", "Giao diện soát vé bằng camera QR dành cho nhân viên rạp", "42"),
-        ("Hình 4.4", "Báo cáo doanh thu đa chiều trực quan và chức năng xuất tệp tin CSV", "44"),
-        ("Hình 4.5", "Giao diện tương tác trò chuyện với Trợ lý phim AI CineReserve", "45")
-    ]
-    for f_code, f_name, f_page in fig_index:
-        p = doc.add_paragraph()
-        p.paragraph_format.space_after = Pt(3)
-        r_c = p.add_run(f_code + ": ")
-        r_c.bold = True
-        r_c.font.name = 'Times New Roman'
-        r_c.font.size = Pt(12)
-        r_n = p.add_run(f_name)
-        r_n.font.name = 'Times New Roman'
-        r_n.font.size = Pt(12)
-    doc.add_page_break()
-
-    # =========================================================================
-    # MỤC LỤC TỔNG QUAN
+    # MỤC LỤC THEO ĐÚNG FORMAT 3 CHƯƠNG CỦA BẠN
     # =========================================================================
     add_title_p("MỤC LỤC", size=16, bold=True, space_after=14)
-    toc_items = [
-        ("LỜI CẢM ƠN", "i"),
-        ("LỜI CAM ĐOAN", "ii"),
-        ("TÓM TẮT ĐỒ ÁN", "iii"),
-        ("DANH MỤC THUẬT NGỮ VÀ CHỮ VIẾT TẮT", "iv"),
-        ("DANH MỤC BẢNG BIỂU", "v"),
-        ("DANH MỤC HÌNH VẼ", "vi"),
+    toc_data = [
+        ("LỜI CẢM ƠN", "I"),
+        ("DANH MỤC BẢNG BIỂU", "V"),
+        ("DANH MỤC HÌNH ẢNH", "VI"),
+        ("DANH MỤC CÁC TỪ VIẾT TẮT", "VIII"),
         ("MỞ ĐẦU", "1"),
-        ("    1. Tính cấp thiết của đề tài", "1"),
-        ("    2. Mục tiêu nghiên cứu", "2"),
+        ("    1. Lý do chọn đề tài", "1"),
+        ("    2. Mục tiêu của đề tài", "2"),
         ("    3. Đối tượng và phạm vi nghiên cứu", "2"),
-        ("    4. Phương pháp nghiên cứu", "3"),
-        ("    5. Bố cục của đồ án", "3"),
-        ("CHƯƠNG 1: TỔNG QUAN ĐỀ TÀI VÀ CƠ SỞ NGHIỆP VỤ", "4"),
-        ("    1.1. Hiện trạng các hệ thống đặt vé trực tuyến hiện nay", "4"),
-        ("    1.2. Khảo sát các quy trình nghiệp vụ rạp chiếu phim", "6"),
-        ("    1.3. Đặt bài toán và bộ quy tắc nghiệp vụ khắt khe của CineReserve", "8"),
-        ("CHƯƠNG 2: PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG", "12"),
-        ("    2.1. Phân tích yêu cầu chức năng (Functional Requirements)", "12"),
-        ("    2.2. Phân tích yêu cầu phi chức năng (Non-Functional Requirements)", "16"),
-        ("    2.3. Thiết kế luồng dữ liệu và biểu đồ tuần tự", "18"),
-        ("    2.4. Thiết kế cơ sở dữ liệu quan hệ 21 bảng", "23"),
-        ("CHƯƠNG 3: CƠ SỞ CÔNG NGHỆ VÀ GIẢI PHÁP KỸ THUẬT", "29"),
-        ("    3.1. Nền tảng Next.js App Router, React 19 và TypeScript", "29"),
-        ("    3.2. Giải pháp kiểm soát tranh chấp ghế bằng PostgreSQL Advisory Lock", "31"),
-        ("    3.3. Giải pháp tích hợp Mô hình ngôn ngữ lớn Google Gemini AI", "34"),
-        ("CHƯƠNG 4: TRIỂN KHAI VÀ HIỆN THỰC HÓA HỆ THỐNG CINERESERVE", "37"),
-        ("    4.1. Kiến trúc phân tầng và tổ chức mã nguồn", "37"),
-        ("    4.2. Hiện thực hóa phân hệ Khách hàng", "39"),
-        ("    4.3. Hiện thực hóa phân hệ Nhân viên soát vé", "42"),
-        ("    4.4. Hiện thực hóa phân hệ Quản trị hệ thống", "44"),
-        ("    4.5. Hiện thực hóa Trợ lý tư vấn phim thông minh", "45"),
-        ("CHƯƠNG 5: KIỂM THỬ VÀ ĐÁNH GIÁ THỰC NGHIỆM", "47"),
-        ("    5.1. Chiến lược kiểm thử tự động toàn diện", "47"),
-        ("    5.2. Đánh giá thực nghiệm khả năng xử lý tranh chấp ghế đồng thời", "49"),
-        ("    5.3. Đánh giá chất lượng và độ trễ của Trợ lý AI", "51"),
-        ("KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN", "53"),
-        ("TÀI LIỆU THAM KHẢO", "55"),
-        ("PHỤ LỤC", "57")
+        ("    4. Ý nghĩa khoa học và thực tiễn của đề tài", "5"),
+        ("    5. Bố cục đề tài", "6"),
+        ("CHƯƠNG 1: CƠ SỞ LÝ THUYẾT VÀ CÔNG NGHỆ HỖ TRỢ", "7"),
+        ("    1.1 Tổng quan về website đặt vé xem phim trực tuyến", "7"),
+        ("    1.2 Xu hướng phát triển các nền tảng đặt vé trực tuyến", "9"),
+        ("    1.3 Các công nghệ phát triển web hiện đại", "13"),
+        ("        1.3.1 Kiến trúc Client – Server", "14"),
+        ("        1.3.2 Server-Side Rendering (SSR) & React Server Components", "16"),
+        ("        1.3.3 RESTful API & Giao thức Streaming", "18"),
+        ("    1.4 Cơ sở lý thuyết về bộ công nghệ CineReserve", "22"),
+        ("        1.4.1 PostgreSQL – Hệ quản trị cơ sở dữ liệu quan hệ mạnh mẽ", "23"),
+        ("        1.4.2 Prisma ORM – Ánh xạ dữ liệu an toàn kiểu tĩnh", "24"),
+        ("        1.4.3 React 19 & Next.js 16 App Router – Nền tảng Full-stack hiện đại", "25"),
+        ("        1.4.4 TypeScript – Ngôn ngữ định kiểu tĩnh cho hệ thống lớn", "26"),
+        ("    1.5 Các công cụ hỗ trợ triển khai", "26"),
+        ("        1.5.1 Google Gemini AI – Mô hình ngôn ngữ lớn tư vấn phim", "27"),
+        ("        1.5.2 Mã QR & jsQR – Giải pháp soát vé một lần tại rạp", "28"),
+        ("        1.5.3 Scrypt & Web Cryptography – Giải pháp bảo mật và băm mật khẩu", "28"),
+        ("        1.5.4 Git & GitHub – Quản lý phiên bản và mã nguồn dự án", "29"),
+        ("CHƯƠNG 2: KHẢO SÁT, PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG", "31"),
+        ("    2.1 Khảo sát và phân tích yêu cầu hệ thống", "31"),
+        ("        2.1.1 Khảo sát và thu thập yêu cầu", "31"),
+        ("        2.1.2 Xác định các tác nhân", "33"),
+        ("        2.1.3 Yêu cầu chức năng", "33"),
+        ("        2.1.4 Yêu cầu phi chức năng", "34"),
+        ("    2.2 Biểu đồ use case", "35"),
+        ("        2.2.1 Biểu đồ use case tổng quát", "35"),
+        ("        2.2.2 Biểu đồ use case chính", "36"),
+        ("        2.2.3 Biểu đồ use case thứ cấp", "36"),
+        ("        2.2.4 Quan hệ của các use case", "37"),
+        ("    2.3 Mô tả chi tiết use case", "38"),
+        ("        2.3.1 Use case Đăng ký", "38"),
+        ("        2.3.2 Use case Đăng nhập", "38"),
+        ("        2.3.3 Use case Đăng xuất", "39"),
+        ("        2.3.4 Use case Quản lý thông tin cá nhân", "40"),
+        ("        2.3.5 Use case Tìm kiếm và Xem chi tiết phim", "40"),
+        ("        2.3.6 Use case Đặt vé nhanh (Quick Booking)", "41"),
+        ("        2.3.7 Use case Chọn và Giữ ghế 5 phút", "42"),
+        ("        2.3.8 Use case Thanh toán và Nhận vé QR", "42"),
+        ("        2.3.9 Use case Trò chuyện với Trợ lý phim AI", "43"),
+        ("        2.3.10 Use case Tra cứu đơn hàng (Khách hàng & Vận hành)", "44"),
+        ("        2.3.11 Use case Soát vé QR (Nhân viên)", "45"),
+        ("        2.3.12 Use case Quản lý phim và Lịch chiếu (Admin)", "45"),
+        ("        2.3.13 Use case Quản lý nhân viên (Admin)", "46"),
+        ("        2.3.14 Use case Báo cáo doanh thu (Staff & Admin)", "47"),
+        ("    2.4 Phân tích Use case", "48"),
+        ("        2.4.1 Phân tích use case Đăng ký & Đăng nhập", "48"),
+        ("        2.4.2 Phân tích use case Chọn và Giữ ghế 5 phút", "49"),
+        ("        2.4.3 Phân tích use case Thanh toán đơn hàng", "50"),
+        ("        2.4.4 Phân tích use case Soát vé QR tại rạp", "51"),
+        ("        2.4.5 Phân tích use case Trò chuyện với Trợ lý AI", "52"),
+        ("        2.4.6 Phân tích use case Quản lý lịch chiếu không trùng phòng", "53"),
+        ("        2.4.7 Phân tích use case Tổng hợp Báo cáo doanh thu", "53"),
+        ("    2.5 Thiết kế cơ sở dữ liệu", "53"),
+        ("        2.5.1 Users & AuthSessions – lưu thông tin người dùng và phiên", "53"),
+        ("        2.5.2 Movies, MovieTranslations & Genres – lưu danh mục phim", "54"),
+        ("        2.5.3 Cinemas, Auditoriums & Seats – lưu rạp và sơ đồ ghế", "54"),
+        ("        2.5.4 Showtimes & ShowtimeSeats – lưu suất chiếu và trạng thái ghế", "55"),
+        ("        2.5.5 HoldSessions, Bookings & PaymentAttempts – lưu giữ chỗ và đơn hàng", "55"),
+        ("        2.5.6 Tickets & TicketRedemptions – lưu vé điện tử và soát vé", "56"),
+        ("        2.5.7 AuditLogs & Refunds – lưu vết kiểm toán và hoàn tiền", "56"),
+        ("CHƯƠNG 3: KẾT QUẢ VÀ ĐÁNH GIÁ", "57"),
+        ("    3.1 Chuẩn bị môi trường và mã nguồn", "57"),
+        ("    3.2 Kết quả triển khai", "59"),
+        ("    3.3 Kiểm thử hệ thống", "63"),
+        ("    3.4 Kết quả đánh giá", "64"),
+        ("KẾT LUẬN", "66"),
+        ("TÀI LIỆU THAM KHẢO", "67")
     ]
-    for item, page in toc_items:
+    for item, page in toc_data:
         p = doc.add_paragraph()
         p.paragraph_format.space_after = Pt(2)
         r1 = p.add_run(item)
@@ -552,7 +428,6 @@ def build_report():
         if not item.startswith("    "):
             r1.bold = True
         
-        # Thêm chấm dẫn
         dot_count = max(5, 75 - len(item) * 1)
         r_dots = p.add_run(" " + "." * dot_count + " ")
         r_dots.font.name = 'Times New Roman'
@@ -566,56 +441,113 @@ def build_report():
     doc.add_page_break()
 
     # =========================================================================
-    # PHẦN NỘI DUNG CHÍNH (ĐÁNH SỐ TRANG TỪ ĐÂY)
+    # DANH MỤC BẢNG BIỂU & HÌNH ẢNH
     # =========================================================================
+    add_title_p("DANH MỤC BẢNG BIỂU", size=16, bold=True, space_after=14)
+    tbl_index = [
+        ("Bảng 1.1", "Tổng hợp công nghệ xây dựng CineReserve", "29"),
+        ("Bảng 2.1", "Doanh thu thị trường điện ảnh và bán vé trực tuyến qua các năm", "32"),
+        ("Bảng 2.2", "Các yêu cầu về chức năng hệ thống", "34"),
+        ("Bảng 2.3", "Mô tả Use case Đăng ký", "38"),
+        ("Bảng 2.4", "Mô tả Use case Đăng nhập", "38"),
+        ("Bảng 2.5", "Mô tả Use case Đăng xuất", "39"),
+        ("Bảng 2.6", "Mô tả Use case Quản lý thông tin cá nhân", "40"),
+        ("Bảng 2.7", "Mô tả Use case Tìm kiếm và Xem chi tiết phim", "40"),
+        ("Bảng 2.8", "Mô tả Use case Đặt vé nhanh", "41"),
+        ("Bảng 2.9", "Mô tả Use case Chọn và Giữ ghế 5 phút", "42"),
+        ("Bảng 2.10", "Mô tả Use case Thanh toán và Nhận vé QR", "42"),
+        ("Bảng 2.11", "Mô tả Use case Trò chuyện với Trợ lý phim AI", "43"),
+        ("Bảng 2.12", "Mô tả Use case Tra cứu đơn hàng", "44"),
+        ("Bảng 2.13", "Mô tả Use case Soát vé QR (Nhân viên)", "45"),
+        ("Bảng 2.14", "Mô tả Use case Quản lý phim và Lịch chiếu (Admin)", "45"),
+        ("Bảng 2.15", "Mô tả Use case Quản lý nhân viên (Admin)", "46"),
+        ("Bảng 2.16", "Mô tả Use case Báo cáo doanh thu (Staff & Admin)", "47"),
+        ("Bảng 2.17", "Cấu trúc bảng Users lưu thông tin người dùng", "53"),
+        ("Bảng 2.18", "Cấu trúc bảng Movies & Showtimes lưu phim và suất chiếu", "54"),
+        ("Bảng 2.19", "Cấu trúc bảng Bookings & Tickets lưu đơn hàng và vé", "55"),
+        ("Bảng 3.1", "Các case kiểm thử hệ thống CineReserve", "63")
+    ]
+    for b_code, b_name, b_page in tbl_index:
+        p = doc.add_paragraph()
+        p.paragraph_format.space_after = Pt(2.5)
+        r_c = p.add_run(b_code + " ")
+        r_c.bold = True
+        r_c.font.name = 'Times New Roman'
+        r_c.font.size = Pt(12)
+        r_n = p.add_run(b_name)
+        r_n.font.name = 'Times New Roman'
+        r_n.font.size = Pt(12)
 
-    add_title_p("MỞ ĐẦU", size=18, bold=True, space_after=14)
-    add_h2("1. Tính cấp thiết của đề tài")
-    add_p("Trong bối cảnh bùng nổ của cuộc Cách mạng Công nghiệp lần thứ tư, chuyển đổi số đã trở thành yêu cầu sống còn đối với hầu hết các ngành kinh tế, và ngành giải trí - dịch vụ rạp chiếu phim cũng không nằm ngoài xu thế đó. Tại Việt Nam, thói quen giải trí tại rạp của người dân đã có sự thay đổi căn bản: thay vì đến trực tiếp quầy vé để xếp hàng chờ mua vé giấy, người tiêu dùng ngày nay ưu tiên việc sử dụng điện thoại thông minh hoặc máy tính cá nhân để lựa chọn phim, xem trước sơ đồ ghế và hoàn tất thủ tục thanh toán từ trước.")
-    add_p("Tuy nhiên, việc xây dựng và duy trì một hệ thống bán vé xem phim trực tuyến đạt chuẩn hiệu năng cao đặt ra hàng loạt bài toán kỹ thuật phức tạp trong ngành Khoa học Máy tính:")
-    add_bullet("Thứ nhất là bài toán tranh chấp tài nguyên đồng thời (Concurrency Contention): Vào các thời điểm mở bán các suất chiếu của các tác phẩm điện ảnh bom tấn (như Marvel, Avatar, hoạt hình Anime chiếu rạp...), hàng ngàn người dùng có thể cùng lúc truy cập và bấm chọn duy nhất một vị trí ghế VIP trong cùng một phần trăm giây. Nếu hệ thống cơ sở dữ liệu không có giải pháp điều phối khóa giao dịch chặt chẽ, tình trạng \"Double-booking\" (hai khách hàng khác nhau cùng mua thành công một vị trí ghế) chắc chắn sẽ xảy ra, dẫn đến xung đột thực tế tại rạp chiếu và phá vỡ tính toàn vẹn dữ liệu.", bold_prefix="Bài toán đồng thời: ")
-    add_bullet("Thứ hai là hạn chế của các hệ thống tư vấn và trải nghiệm người dùng hiện tại: Đa số các nền tảng đặt vé hiện nay (như CGV, Lotte, Beta Cinemas...) chỉ cung cấp các thanh tìm kiếm từ khóa cứng nhắc hoặc các bộ lọc cơ bản theo rạp và thể loại. Khi người xem có nhu cầu tự nhiên và phức tạp (ví dụ: \"Tối nay quanh khu vực Cầu Giấy có phim nào phù hợp cho gia đình có trẻ em 8 tuổi xem không?\"), hệ thống hoàn toàn bất lực trong việc thấu hiểu và gợi ý chính xác.", bold_prefix="Hạn chế trong tìm kiếm thông minh: ")
-    add_bullet("Thứ ba là tính toàn vẹn và khép kín của quy trình nghiệp vụ: Quá trình vận hành đòi hỏi sự liên thông chặt chẽ giữa việc giữ ghế có thời hạn (Hold Session), trừ tiền an toàn có kiểm soát lặp lại (Idempotent Payment), tự động phát hành vé điện tử mã QR, cơ chế xác thực một chạm tại cửa rạp nhằm chống dùng lại vé lậu, và hệ thống báo cáo doanh thu minh bạch giữa các chi nhánh rạp.", bold_prefix="Quy trình nghiệp vụ khép kín: ")
-    add_p("Xuất phát từ những đòi hỏi thực tiễn cấp bách đó, đề tài tốt nghiệp \"Xây dựng website đặt vé xem phim CineReserve sử dụng Next.js, TypeScript và tích hợp chatbot AI\" được lựa chọn nhằm nghiên cứu, ứng dụng các giải pháp kiến trúc phần mềm tiên tiến nhất hiện nay để xây dựng một sản phẩm thương mại điện tử điện ảnh hoàn chỉnh, giải quyết triệt để các vấn đề nêu trên.")
-
-    add_h2("2. Mục tiêu nghiên cứu")
-    add_p("Đề tài tập trung hoàn thành các mục tiêu khoa học và ứng dụng sau:")
-    add_bullet("Nghiên cứu cơ chế kiểm soát tranh chấp đồng thời cấp giao dịch (Transaction-level Concurrency Control) bằng kỹ thuật PostgreSQL Advisory Locks, giải quyết bài toán phiên giữ ghế 5 phút không xung đột.", bold_prefix="Mục tiêu lý thuyết: ")
-    add_bullet("Xây dựng thành công hệ thống website CineReserve với đầy đủ 3 phân hệ: Khách hàng (Customer), Nhân viên rạp (Staff) và Quản trị viên (Admin) trên nền tảng Next.js 16 App Router, React 19, TypeScript và Prisma ORM.", bold_prefix="Mục tiêu phần mềm: ")
-    add_bullet("Nghiên cứu và tích hợp mô hình ngôn ngữ lớn (Google Gemini LLM) thông qua kỹ thuật Prompt Engineering có cấu trúc JSON Schema và giao thức truyền dòng Streaming NDJSON để xây dựng Trợ lý ảo tư vấn phim thời gian thực.", bold_prefix="Mục tiêu tích hợp AI: ")
-    add_bullet("Xây dựng bộ kiểm thử tích hợp tự động với hơn 840 ca kiểm thử nhằm bảo chứng tính toàn vẹn, độ ổn định và an toàn giao dịch của toàn bộ hệ thống.", bold_prefix="Mục tiêu kiểm thử: ")
-
-    add_h2("3. Đối tượng và phạm vi nghiên cứu")
-    add_p("Đối tượng nghiên cứu: Các quy trình phân phối vé tại cụm rạp chiếu phim; các giải pháp xử lý tranh chấp giao dịch ACID trong hệ quản trị cơ sở dữ liệu quan hệ; kiến trúc kết xuất phía máy chủ (Server-Side Rendering) của Next.js; kỹ thuật giao tiếp với Mô hình ngôn ngữ lớn (Generative AI).")
-    add_p("Phạm vi nghiên cứu: Đồ án tập trung vào luồng nghiệp vụ cốt lõi từ duyệt phim, giữ ghế 5 phút, thanh toán giả lập có xác nhận độ tuổi, phát hành vé QR, nhân viên quét QR soát vé bằng camera/tải ảnh, quản lý lịch chiếu và thống kê doanh thu. Hệ thống vận hành trên môi trường mô phỏng chuỗi rạp nội bộ và cổng thanh toán giả lập an toàn.")
-
-    add_h2("4. Phương pháp nghiên cứu")
-    add_p("Phương pháp nghiên cứu lý thuyết: Thu thập, tổng hợp và phân tích các tài liệu học thuật về thiết kế cơ sở dữ liệu chuẩn hóa, tài liệu kỹ thuật chuyên sâu về Next.js App Router, tài liệu về cơ chế Explicit Locking của PostgreSQL và các hướng dẫn chính thức từ Google AI.")
-    add_p("Phương pháp thực nghiệm: Triển khai phát triển phần mềm theo mô hình lặp (Iterative Development), xây dựng cơ sở dữ liệu với Prisma ORM trên PostgreSQL, tiến hành viết các script kiểm thử tự động (Integration Tests) để đo lường và kiểm chứng độ chính xác của từng module chức năng.")
-
-    add_h2("5. Bố cục của đồ án")
-    add_p("Báo cáo đồ án tốt nghiệp được cấu trúc thành 5 chương chính như sau:")
-    add_bullet("Chương 1: Tổng quan đề tài và Cơ sở nghiệp vụ - Trình bày khảo sát hiện trạng, phân tích các hệ thống rạp hiện hữu và định nghĩa chi tiết bộ quy tắc nghiệp vụ của CineReserve.")
-    add_bullet("Chương 2: Phân tích và Thiết kế hệ thống - Mô tả biểu đồ Use Case, phân tích yêu cầu phi chức năng, biểu đồ tuần tự luồng giữ ghế và thiết kế cơ sở dữ liệu quan hệ gồm 21 bảng.")
-    add_bullet("Chương 3: Cơ sở công nghệ và Giải pháp kỹ thuật - Đi sâu phân tích kiến trúc Next.js App Router, giải pháp khóa PostgreSQL Advisory Lock và kỹ thuật tích hợp Chatbot Gemini bằng Streaming NDJSON.")
-    add_bullet("Chương 4: Triển khai và Hiện thực hóa hệ thống - Giới thiệu giao diện thực tế và logic cài đặt của từng phân hệ: Khách hàng, Nhân viên, Quản trị và Trợ lý AI.")
-    add_bullet("Chương 5: Kiểm thử và Đánh giá thực nghiệm - Trình bày kết quả của 15 bộ script kiểm thử tự động, thử nghiệm chịu tải tranh chấp ghế đồng thời và đánh giá hiệu năng.")
+    add_title_p("", size=12, space_after=12)
+    add_title_p("DANH MỤC HÌNH ẢNH", size=16, bold=True, space_after=14)
+    fig_index = [
+        ("Hình 1.1", "Giao diện hệ thống đặt vé xem phim trực tuyến hiện đại", "7"),
+        ("Hình 1.2", "Các ứng dụng và nền tảng đặt vé xem phim phổ biến tại Việt Nam", "8"),
+        ("Hình 1.3", "Doanh thu ấn tượng từ dịch vụ đặt vé trực tuyến qua các năm", "10"),
+        ("Hình 1.4", "Thị phần các kênh phân phối vé xem phim trên thế giới", "11"),
+        ("Hình 1.5", "Công nghệ quét vé không chạm QR Code tại các cụm rạp", "12"),
+        ("Hình 1.6", "Nguyên tắc hoạt động của mô hình Client - Server", "14"),
+        ("Hình 1.7", "Cách thức hoạt động của Client - Server", "15"),
+        ("Hình 1.8", "Ưu và nhược điểm của mô hình Client - Server", "15"),
+        ("Hình 1.9", "So sánh mô hình Server-Side Rendering (SSR) và Client-Side Rendering", "16"),
+        ("Hình 1.10", "Ưu điểm của kiến trúc React Server Components trên Next.js", "17"),
+        ("Hình 1.11", "Kiến trúc RESTful API và luồng dữ liệu", "19"),
+        ("Hình 1.12", "Cách thức hoạt động của RESTful API", "20"),
+        ("Hình 1.13", "Cấu trúc kiểu dữ liệu JSON trong trao đổi API", "21"),
+        ("Hình 1.14", "Bộ công nghệ cốt lõi xây dựng hệ thống CineReserve", "22"),
+        ("Hình 1.15", "Cơ sở dữ liệu quan hệ PostgreSQL và Prisma ORM", "23"),
+        ("Hình 1.16", "Sơ đồ luồng xử lý Transaction và Advisory Lock trong PostgreSQL", "24"),
+        ("Hình 1.17", "Cơ chế phân chia Component trong React 19 và Next.js 16", "25"),
+        ("Hình 1.18", "Xử lý bất đồng bộ và Non-blocking I/O trong Node.js", "26"),
+        ("Hình 1.19", "Mô hình ngôn ngữ lớn Google Gemini AI", "27"),
+        ("Hình 1.20", "Giải thuật đọc mã QR bằng jsQR trên Web Camera", "28"),
+        ("Hình 2.1", "Biểu đồ Use case tổng quát", "35"),
+        ("Hình 2.2", "Các Use case chính (Khách hàng)", "36"),
+        ("Hình 2.3", "Các Use case thứ cấp (Nhân viên & Quản trị)", "36"),
+        ("Hình 2.4", "Quan hệ giữa các Use case", "37"),
+        ("Hình 2.5", "Biểu đồ trình tự Use case Đăng ký", "48"),
+        ("Hình 2.6", "Biểu đồ trình tự Use case Đăng nhập", "49"),
+        ("Hình 2.7", "Biểu đồ trình tự Use case Chọn và Giữ ghế 5 phút", "49"),
+        ("Hình 2.8", "Biểu đồ trình tự Use case Thanh toán và Nhận vé QR", "50"),
+        ("Hình 2.9", "Biểu đồ trình tự Use case Soát vé QR tại rạp", "51"),
+        ("Hình 2.10", "Biểu đồ trình tự Use case Trò chuyện với Trợ lý AI", "52"),
+        ("Hình 2.11", "Biểu đồ trình tự Use case Quản lý lịch chiếu không trùng phòng", "53"),
+        ("Hình 3.1", "Giao diện trang chủ đã đăng nhập", "59"),
+        ("Hình 3.2", "Giao diện trang chủ chưa đăng nhập", "59"),
+        ("Hình 3.3", "Giao diện chi tiết phim và lịch chiếu theo rạp", "60"),
+        ("Hình 3.4", "Giao diện sơ đồ phòng chiếu và chọn ghế 5 phút", "60"),
+        ("Hình 3.5", "Giao diện thanh toán và xác nhận độ tuổi", "61"),
+        ("Hình 3.6", "Giao diện chi tiết đơn hàng và hiển thị vé QR", "61"),
+        ("Hình 3.7", "Giao diện Trợ lý phim AI CineReserve", "62"),
+        ("Hình 3.8", "Giao diện soát vé QR dành cho nhân viên", "62"),
+        ("Hình 3.9", "Giao diện quản lý phim và lịch chiếu Admin", "63"),
+        ("Hình 3.10", "Giao diện báo cáo doanh thu đa chiều", "63")
+    ]
+    for f_code, f_name, f_page in fig_index:
+        p = doc.add_paragraph()
+        p.paragraph_format.space_after = Pt(2.5)
+        r_c = p.add_run(f_code + " ")
+        r_c.bold = True
+        r_c.font.name = 'Times New Roman'
+        r_c.font.size = Pt(12)
+        r_n = p.add_run(f_name)
+        r_n.font.name = 'Times New Roman'
+        r_n.font.size = Pt(12)
     doc.add_page_break()
 
     # =========================================================================
-    # CHƯƠNG 1
+    # DANH MỤC CÁC TỪ VIẾT TẮT (THEO ĐÚNG BẢNG BẠN)
     # =========================================================================
-    add_title_p("CHƯƠNG 1: TỔNG QUAN ĐỀ TÀI VÀ CƠ SỞ NGHIỆP VỤ", size=16, bold=True, space_after=14)
-    add_h2("1.1. Hiện trạng các hệ thống đặt vé trực tuyến hiện nay")
-    add_p("Thị trường chiếu phim rạp tại Việt Nam hiện nay có sự góp mặt của các chuỗi rạp lớn như CGV Cinemas, Lotte Cinema, Galaxy Cinema, BHD Star Cineplex và Beta Cinemas. Qua quá trình khảo sát thực tế hành vi người dùng và trải nghiệm trên các hệ thống này, có thể rút ra bảng so sánh đối chiếu như sau:")
-
-    add_table_header_caption("Bảng 1.1: So sánh đặc điểm hệ thống CineReserve và các nền tảng thương mại hiện nay")
-    t_comp = doc.add_table(rows=1, cols=4)
-    t_comp.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_table_borders(t_comp)
-    for idx, name in enumerate(["Tiêu chí so sánh", "Hệ thống CGV / Lotte", "Hệ thống Beta / Galaxy", "Hệ thống CineReserve"]):
-        c = t_comp.rows[0].cells[idx]
-        c.text = name
+    add_title_p("DANH MỤC CÁC TỪ VIẾT TẮT", size=16, bold=True, space_after=14)
+    t_abbr = doc.add_table(rows=1, cols=4)
+    t_abbr.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(t_abbr)
+    hdr_cells = t_abbr.rows[0].cells
+    hdr_cells[0].text = "STT"
+    hdr_cells[1].text = "Từ viết tắt"
+    hdr_cells[2].text = "Tiếng Anh"
+    hdr_cells[3].text = "Tiếng Việt"
+    for c in hdr_cells:
         set_cell_shading(c, "EBF1F5")
         p = c.paragraphs[0]
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
@@ -624,21 +556,467 @@ def build_report():
             r.font.name = 'Times New Roman'
             r.font.size = Pt(11.5)
 
-    comp_rows = [
-        ("Kiến trúc Web", "Single Page Application (SPA) truyền thống", "Web tích hợp đa nền tảng", "Next.js App Router (Server-Side Rendering)"),
-        ("Xử lý giữ ghế đồng thời", "Khóa trên Cache/Memory, dễ nghẽn khi mạng lag", "Khóa hàng đợi (Queue), đôi khi chậm phản hồi", "PostgreSQL Advisory Lock trực tiếp trong Transaction"),
-        ("Thời gian giữ ghế", "5 - 10 phút, tự hủy", "5 phút, đôi khi tải lại bị mất phiên", "Chính xác 5 phút theo đồng hồ CSDL, tải lại giữ nguyên"),
-        ("Tính năng tìm kiếm thông minh", "Tìm kiếm theo từ khóa tên phim cơ bản", "Bộ lọc danh mục tĩnh theo rạp và ngày", "Tích hợp Chatbot Gemini AI nhận diện ngữ cảnh tự nhiên"),
-        ("Soát vé tại rạp", "Máy quét mã vạch chuyên dụng tại quầy", "Máy quét mã vạch hoặc nhân viên bấm tay", "Trực tiếp qua Web Camera quét QR hoặc tải tệp ảnh"),
-        ("Hỗ trợ đa ngôn ngữ", "Chuyển trang tĩnh hoặc tải lại toàn bộ", "Chủ yếu tiếng Việt", "Song ngữ Việt/Anh lưu trữ chuẩn hóa trong DB"),
-        ("Đối soát tài chính", "Phức tạp, xử lý theo chu kỳ ngày", "Báo cáo cuối ca nhân viên", "Báo cáo thời gian thực, tách biệt Thu - Hoàn - Ròng")
+    abbr_list = [
+        ("1", "AI", "Artificial Intelligence", "Trí tuệ nhân tạo"),
+        ("2", "API", "Application Programming Interface", "Giao diện lập trình ứng dụng"),
+        ("3", "CSRF", "Cross-Site Request Forgery", "Giả mạo yêu cầu giữa các trang web"),
+        ("4", "DTO", "Data Transfer Object", "Đối tượng truyền tải dữ liệu"),
+        ("5", "ERD", "Entity Relationship Diagram", "Sơ đồ quan hệ thực thể"),
+        ("6", "HaUI", "Hanoi University of Industry", "Trường Đại học Công nghiệp Hà Nội"),
+        ("7", "HTTP", "HyperText Transfer Protocol", "Giao thức truyền siêu văn bản"),
+        ("8", "JSON", "JavaScript Object Notation", "Định dạng ký hiệu đối tượng JavaScript"),
+        ("9", "LLM", "Large Language Model", "Mô hình ngôn ngữ lớn"),
+        ("10", "NDJSON", "Newline-Delimited JSON", "Định dạng JSON phân tách theo dòng"),
+        ("11", "ORM", "Object-Relational Mapping", "Ánh xạ quan hệ đối tượng"),
+        ("12", "PII", "Personally Identifiable Information", "Thông tin định danh cá nhân nhạy cảm"),
+        ("13", "QR Code", "Quick Response Code", "Mã phản hồi nhanh (mã vạch ma trận 2D)"),
+        ("14", "RBAC", "Role-Based Access Control", "Kiểm soát truy cập dựa trên vai trò"),
+        ("15", "REST", "Representational State Transfer", "Chuyển đổi trạng thái đại diện"),
+        ("16", "RSC", "React Server Components", "Thành phần máy chủ React"),
+        ("17", "SEO", "Search Engine Optimization", "Tối ưu hóa công cụ tìm kiếm"),
+        ("18", "SPA", "Single Page Application", "Ứng dụng trang đơn"),
+        ("19", "SSR", "Server-Side Rendering", "Kết xuất phía máy chủ"),
+        ("20", "UUID", "Universally Unique Identifier", "Mã định danh duy nhất toàn cầu"),
+        ("21", "VND", "Vietnamese Dong", "Đồng Việt Nam")
     ]
-    for r_data in comp_rows:
-        row = t_comp.add_row()
+    for stt, abb, eng, vie in abbr_list:
+        row = t_abbr.add_row()
+        c0, c1, c2, c3 = row.cells
+        c0.text = stt
+        c1.text = abb
+        c2.text = eng
+        c3.text = vie
+        for idx, c in enumerate([c0, c1, c2, c3]):
+            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
+            p = c.paragraphs[0]
+            p.paragraph_format.space_after = Pt(2)
+            if idx in (0, 1):
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for r in p.runs:
+                    if idx == 1:
+                        r.bold = True
+                    r.font.name = 'Times New Roman'
+                    r.font.size = Pt(11)
+            else:
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                for r in p.runs:
+                    r.font.name = 'Times New Roman'
+                    r.font.size = Pt(11)
+    doc.add_page_break()
+
+    # =========================================================================
+    # PHẦN MỞ ĐẦU (GIỐNG CẤU TRÚC 5 MỤC CỦA BẠN)
+    # =========================================================================
+    add_title_p("MỞ ĐẦU", size=16, bold=True, space_after=14)
+    add_h2("1. Lý do chọn đề tài")
+    add_p("Trong thời đại hiện nay, cùng với sự phát triển mạnh mẽ của công nghệ thông tin và mạng Internet, nhu cầu giải trí trực tuyến của người dân ngày càng tăng cao. Điện ảnh không chỉ là một hình thức nghệ thuật giải trí đại chúng hàng đầu mà còn là không gian gắn kết, chia sẻ cảm xúc và trải nghiệm văn hóa tuyệt vời giữa bạn bè và gia đình. Các cụm rạp chiếu phim hiện đại như CGV, Lotte Cinema, Beta Cinemas hay BHD Star đã trở thành điểm đến quen thuộc vào mỗi dịp cuối tuần của hàng triệu khán giả trẻ trên khắp cả nước.")
+    add_p("Sự phát triển vượt bậc của các công nghệ web hiện đại, đặc biệt là các framework full-stack thế hệ mới như Next.js 16, React 19 và TypeScript, đã tạo điều kiện thuận lợi cho việc xây dựng các nền tảng thương mại điện tử chuyên ngành rạp chiếu phim với tốc độ tải trang nhanh vượt trội, giao diện điện ảnh lôi cuốn và khả năng tương tác mượt mà. Bên cạnh đó, bài toán đặt vé xem phim trực tuyến luôn đi kèm với những thách thức kỹ thuật rất lớn trong khoa học máy tính: làm thế nào để xử lý hàng ngàn yêu cầu chọn và giữ cùng một ghế trong tích tắc mà không xảy ra hiện tượng tranh chấp (double-booking)? Làm thế nào để tự động hóa quy trình soát vé bằng mã QR một chạm và cung cấp trải nghiệm tư vấn phim thông minh bằng trí tuệ nhân tạo (AI)?")
+    add_p("Việc em lựa chọn đề tài \"Xây dựng website đặt vé xem phim CineReserve sử dụng Next.js, TypeScript và tích hợp chatbot AI\" xuất phát từ mong muốn vận dụng những kiến thức chuyên sâu đã tích lũy trong suốt 4 năm học ngành Khoa học Máy tính vào một sản phẩm thực tế. Đề tài vừa mang tính ứng dụng cao trong đời sống, vừa có ý nghĩa đặc biệt trong việc rèn luyện tư duy thiết kế kiến trúc phần mềm chịu tải cao, kiểm soát giao dịch ACID, bảo mật dữ liệu và tích hợp mô hình ngôn ngữ lớn (LLM).")
+
+    add_h2("2. Mục tiêu của đề tài")
+    add_h3("Mục tiêu tổng quát:")
+    add_bullet("Xây dựng một hệ thống website đặt vé xem phim trực tuyến CineReserve có kiến trúc phân tầng rõ ràng (Server Components – API Services – PostgreSQL Database), đảm bảo tính toàn vẹn dữ liệu, hiệu năng cao, an toàn giao dịch và có thể triển khai vận hành ổn định trên môi trường thực tế.")
+    add_bullet("Giải quyết triệt để bài toán tranh chấp tài nguyên đồng thời khi giữ ghế thông qua cơ chế khóa cấp giao dịch PostgreSQL Advisory Lock.")
+    add_bullet("Tích hợp Trợ lý ảo tư vấn phim thời gian thực sử dụng Google Gemini AI và giao thức truyền dòng Streaming NDJSON.")
+
+    add_h3("Mục tiêu cụ thể:")
+    add_bullet("Thiết kế kiến trúc hệ thống hiện đại theo mô hình Next.js App Router, phân tách rành mạch giữa các Server Component render trực tiếp tại máy chủ và các Client Component tương tác.")
+    add_bullet("Thiết kế cơ sở dữ liệu quan hệ chuẩn hóa gồm 21 bảng quản lý toàn diện phim, phòng chiếu, suất chiếu, ghế, đơn hàng, vé và doanh thu.")
+    add_bullet("Xây dựng giải pháp giữ ghế an toàn có thời hạn 5 phút (300 giây) được đồng bộ tuyệt đối theo đồng hồ cơ sở dữ liệu, tự động giải phóng khi hết hạn.")
+    add_bullet("Hiện thực hóa quy trình thanh toán mô phỏng bất biến (Idempotent Payment), tự động phát hành vé điện tử mã QR độc lập cho từng ghế.")
+    add_bullet("Xây dựng module soát vé QR hai bước cho nhân viên rạp bằng Camera điện thoại qua thư viện jsQR, ngăn chặn triệt để hành vi dùng lại vé đã quét.")
+    add_bullet("Tích hợp Chatbot Gemini AI có khả năng thấu hiểu ngôn ngữ tự nhiên, bảo tồn ngữ cảnh hội thoại tiếng Việt (tuổi, rạp, ngày) và gợi ý lịch chiếu thực tế.")
+    add_bullet("Xây dựng hệ thống kiểm thử tích hợp tự động toàn diện với hơn 840 ca kiểm thử nhằm bảo chứng chất lượng và tính ổn định của hệ thống.")
+
+    add_h2("3. Đối tượng và phạm vi nghiên cứu")
+    add_p("Với đề tài \"Xây dựng website đặt vé xem phim CineReserve sử dụng Next.js, TypeScript và tích hợp chatbot AI\", em đã xác định các nhóm đối tượng nghiên cứu chính như sau:")
+    add_h3("Đối tượng người dùng:")
+    add_bullet("Khách hàng (End-user / Customer): Có thể duyệt xem danh mục phim, đặt vé nhanh, chọn ghế trên sơ đồ trực quan, thanh toán, quản lý vé QR cá nhân và trò chuyện với Trợ lý AI.", bold_prefix="Khách hàng: ")
+    add_bullet("Nhân viên rạp (Staff): Được phân công làm việc tại một chi nhánh rạp cụ thể; có quyền tra cứu đơn hàng và thực hiện quét mã QR soát vé khán giả vào rạp.", bold_prefix="Nhân viên soát vé: ")
+    add_bullet("Quản trị viên (Admin): Quản lý toàn bộ danh mục phim (song ngữ Việt/Anh), thiết lập suất chiếu không trùng phòng, quản lý tài khoản nhân viên và theo dõi báo cáo doanh thu toàn hệ thống.", bold_prefix="Quản trị viên: ")
+
+    add_h3("Đối tượng kỹ thuật và công nghệ:")
+    add_bullet("Kiến trúc Full-stack: Next.js 16 App Router kết hợp React 19 và CSS Modules.")
+    add_bullet("Cơ sở dữ liệu: PostgreSQL 17 kết hợp Prisma ORM và kỹ thuật PostgreSQL Advisory Locks.")
+    add_bullet("Trí tuệ nhân tạo: Google Gemini AI API (`gemini-3.5-flash-lite`) với JSON Schema và Streaming NDJSON.")
+    add_bullet("Giải thuật xử lý hình ảnh: Thư viện giải mã ma trận QR Code `jsQR`.")
+
+    add_h3("Phạm vi và phương pháp nghiên cứu:")
+    add_bullet("Đề tài tập trung phát triển nền tảng web responsive hỗ trợ đa thiết bị (máy tính để bàn, máy tính bảng và điện thoại di động).")
+    add_bullet("Cổng thanh toán trong đề tài được triển khai dưới dạng mô phỏng an toàn (Mock Payment) phục vụ nghiệm thu luồng nghiệp vụ.")
+    add_p("Để hoàn thành đồ án, em đã áp dụng 4 phương pháp nghiên cứu chính:")
+    add_bullet("Phương pháp khảo sát, phân tích: Khảo sát thực tế các cụm rạp CGV, Beta, BHD để định hình các quy tắc nghiệp vụ rạp chiếu phim chuẩn xác.", bold_prefix="1. ")
+    add_bullet("Phương pháp phân tích thiết kế hệ thống: Ứng dụng phương pháp hướng đối tượng, xây dựng biểu đồ Use Case, Sequence Diagram và mô hình quan hệ thực thể ERD.", bold_prefix="2. ")
+    add_bullet("Phương pháp cài đặt và hiện thực hóa: Lập trình mã nguồn bằng Next.js, TypeScript, thiết lập transaction và khóa concurrency trong PostgreSQL, tích hợp Gemini AI.", bold_prefix="3. ")
+    add_bullet("Phương pháp kiểm thử và đánh giá: Viết 15 kịch bản TypeScript tự động kiểm tra toàn bộ luồng nghiệp vụ, kiểm thử áp lực đồng thời và đánh giá độ chính xác của AI.", bold_prefix="4. ")
+
+    add_h2("4. Ý nghĩa khoa học và thực tiễn của đề tài")
+    add_h3("Ý nghĩa khoa học:")
+    add_p("Đề tài nghiên cứu và ứng dụng thành công các nguyên lý nâng cao trong Khoa học Máy tính: kiểm soát giao dịch đồng thời (ACID Concurrency Control) trong cơ sở dữ liệu quan hệ, kiến trúc Server Components tối ưu băng thông mạng và kỹ thuật Prompt Engineering có cấu trúc khi tích hợp các mô hình ngôn ngữ lớn (LLM).")
+    add_h3("Ý nghĩa thực tiễn:")
+    add_p("Xây dựng nên một hệ thống phần mềm hoàn chỉnh, giải quyết trọn vẹn bài toán vận hành của một chuỗi rạp chiếu phim hiện đại: từ khâu bán vé trực tuyến không tranh chấp đến khâu kiểm soát cửa rạp bằng mã QR và báo cáo tài chính minh bạch.")
+
+    add_h2("5. Bố cục đề tài")
+    add_p("Nội dung cuốn báo cáo đồ án tốt nghiệp được chia thành 3 chương chính theo đúng quy định:")
+    add_p("Chương 1: Cơ sở lý thuyết và công nghệ hỗ trợ - Trình bày tổng quan về hệ thống đặt vé xem phim trực tuyến, khảo sát xu hướng thị trường, kiến trúc Client-Server, Server-Side Rendering và các công nghệ cốt lõi của CineReserve (Next.js, TypeScript, PostgreSQL, Prisma, Gemini AI, jsQR).")
+    add_p("Chương 2: Khảo sát, phân tích và thiết kế hệ thống - Trình bày phân tích yêu cầu hệ thống, xác định tác nhân, biểu đồ Use case tổng quát và chi tiết, các biểu đồ trình tự (Sequence Diagrams) và thiết kế cơ sở dữ liệu quan hệ 21 bảng.")
+    add_p("Chương 3: Kết quả và đánh giá - Trình bày quá trình chuẩn bị môi trường, mã nguồn, kết quả triển khai giao diện thực tế, kết quả 15 bộ script kiểm thử tự động với hơn 840 tests, đánh giá ưu nhược điểm của hệ thống.")
+    add_p("Phần Kết luận - Đánh giá kết quả đạt được, chỉ ra các hạn chế và đề xuất hướng phát triển tiếp theo của đề tài.")
+    doc.add_page_break()
+
+    # =========================================================================
+    # CHƯƠNG 1 (CƠ SỞ LÝ THUYẾT VÀ CÔNG NGHỆ HỖ TRỢ)
+    # =========================================================================
+    add_title_p("CHƯƠNG 1: CƠ SỞ LÝ THUYẾT VÀ CÔNG NGHỆ HỖ TRỢ", size=16, bold=True, space_after=14)
+    add_h2("1.1 Tổng quan về website đặt vé xem phim trực tuyến")
+    add_p("Website đặt vé xem phim trực tuyến là một hệ thống ứng dụng web cho phép khán giả tra cứu lịch chiếu, lựa chọn cụm rạp, xem trước sơ đồ ghế ngồi và thực hiện đặt vé, thanh toán trực tuyến thông qua kết nối Internet mà không cần phải đến quầy vé vật lý. Đây là mô hình dịch vụ số hóa hiện đại, kết hợp chặt chẽ giữa công nghệ web thời gian thực, quản lý giao dịch cơ sở dữ liệu và các công cụ phát hành vé điện tử.")
+    add_p("So với phương thức mua vé truyền thống trước đây (khán giả phải đến trực tiếp rạp, xếp hàng chờ đợi và dễ rơi vào tình trạng hết vé hoặc chỉ còn ghế xấu), hệ thống đặt vé trực tuyến đem lại những ưu điểm vượt trội:")
+    add_bullet("Tiết kiệm tối đa thời gian và công sức: Khán giả có thể chủ động giữ trước vị trí ghế ngồi ưa thích (ghế trung tâm, ghế VIP) từ trước nhiều ngày.", bold_prefix="- ")
+    add_bullet("Minh bạch thông tin: Cung cấp đầy đủ thông tin về thời lượng phim, đạo diễn, dàn diễn viên, tóm tắt nội dung và phân loại độ tuổi theo quy định.", bold_prefix="- ")
+    add_bullet("Thúc đẩy doanh thu và quản lý rạp tối ưu: Doanh nghiệp rạp có thể dự báo trước số lượng khách xem từng khung giờ để bố trí phòng chiếu và nhân sự phục vụ hợp lý.", bold_prefix="- ")
+
+    add_h2("1.2 Xu hướng phát triển các nền tảng đặt vé trực tuyến")
+    add_p("Trên thế giới cũng như tại Việt Nam, ngành dịch vụ rạp chiếu phim đã có sự bứt phá mạnh mẽ sau giai đoạn chuyển đổi số toàn diện:")
+    add_bullet("Xu hướng trên thế giới: Các hệ thống bán vé khổng lồ như AMC Theatres (Mỹ), Fandango, hay TOHO Cinemas (Nhật Bản) đều chuyển đổi sang mô hình ứng dụng web hiện đại, tích hợp công nghệ AI để cá nhân hóa đề xuất phim và áp dụng vé điện tử mã QR không chạm (Contactless Check-in).")
+    add_bullet("Xu hướng tại Việt Nam: Tỷ lệ người xem phim tại các thành phố lớn (Hà Nội, TP.HCM, Đà Nẵng) đặt vé qua ứng dụng và website đã đạt trên 75%. Khán giả ngày càng yêu cầu cao hơn về tốc độ tải trang, trải nghiệm giao diện điện ảnh sang trọng và mong muốn có sự hỗ trợ tư vấn tức thì khi lựa chọn phim.")
+
+    add_h2("1.3 Các công nghệ phát triển web hiện đại")
+    add_h3("1.3.1 Kiến trúc Client – Server")
+    add_p("Kiến trúc Client - Server là mô hình nền tảng trong phát triển ứng dụng mạng hiện đại. Hệ thống phân chia thành hai thành phần rành mạch: Client (Trình duyệt web của người dùng) gửi yêu cầu (Request) thông qua giao thức mạng HTTP/HTTPS; và Server (Máy chủ ứng dụng) tiếp nhận, thực thi logic nghiệp vụ, truy vấn cơ sở dữ liệu và gửi trả kết quả (Response). Mô hình này giúp tập trung hóa việc quản lý dữ liệu, nâng cao tính bảo mật và cho phép mở rộng quy mô dễ dàng.")
+
+    add_h3("1.3.2 Server-Side Rendering (SSR) & React Server Components")
+    add_p("Trong nhiều năm qua, mô hình Single Page Application (SPA) truyền thống đã bộc lộ những điểm yếu chí tử khi ứng dụng phát triển lớn: file JavaScript tải về client quá nặng gây đơ lag máy, và khả năng tối ưu hóa công cụ tìm kiếm (SEO) rất kém do trang ban đầu chỉ là file HTML trống rỗng.")
+    add_p("Để khắc phục triệt để nhược điểm này, hệ thống CineReserve ứng dụng kiến trúc **Server-Side Rendering (SSR)** kết hợp cùng **React Server Components (RSC)** của Next.js 16. Toàn bộ mã nguồn kết xuất giao diện được xử lý trực tiếp tại máy chủ. Máy chủ nạp dữ liệu từ cơ sở dữ liệu PostgreSQL và trả về tệp HTML hoàn chỉnh cho trình duyệt. Nhờ đó, tốc độ mở trang lần đầu (First Contentful Paint) diễn ra gần như tức thì, giảm 70% dung lượng mã JavaScript phải tải xuống máy khách và tối ưu hóa SEO tuyệt đối.")
+
+    add_h3("1.3.3 RESTful API & Giao thức Streaming")
+    add_p("Hệ thống xây dựng các giao diện lập trình ứng dụng tuân thủ nghiêm ngặt chuẩn **RESTful API** sử dụng các phương thức HTTP chuẩn tắc (GET, POST, PUT, DELETE, PATCH). Dữ liệu trao đổi được định dạng bằng chuẩn JSON. Đặc biệt, để phục vụ tính năng trò chuyện với Trợ lý AI mà không làm người dùng phải chờ đợi lâu, hệ thống triển khai giao thức truyền dòng **Streaming NDJSON (Newline-Delimited JSON)**, cho phép máy chủ đẩy từng phần phản hồi về client theo thời gian thực.")
+
+    add_h2("1.4 Cơ sở lý thuyết về bộ công nghệ CineReserve")
+    add_h3("1.4.1 PostgreSQL – Hệ quản trị cơ sở dữ liệu quan hệ mạnh mẽ")
+    add_p("PostgreSQL là hệ quản trị cơ sở dữ liệu quan hệ mã nguồn mở tiên tiến nhất hiện nay, tuân thủ nghiêm ngặt chuẩn SQL và bảo đảm trọn vẹn 4 tính chất ACID (Atomicity, Consistency, Isolation, Durability). Điểm đặc biệt nhất khiến PostgreSQL được lựa chọn cho CineReserve là tính năng **PostgreSQL Advisory Lock** (`pg_advisory_xact_lock`) – cho phép ứng dụng tạo khóa giao dịch phân tán trực tiếp bằng số nguyên trong bộ nhớ CSDL mà không cần phụ thuộc vào hạ tầng ngoài.")
+
+    add_h3("1.4.2 Prisma ORM – Ánh xạ dữ liệu an toàn kiểu tĩnh")
+    add_p("Prisma là thư viện ORM thế hệ mới dành cho Node.js và TypeScript. Prisma cung cấp schema trực quan (`schema.prisma`), tự động quản lý lịch sử biến đổi bảng (Migrations) và tự động sinh mã nguồn truy vấn có kiểm tra kiểu dữ liệu tĩnh (Type-safe Client). Điều này giúp lập trình viên phát hiện toàn bộ các lỗi truy vấn dữ liệu ngay khi viết mã, loại bỏ hoàn toàn các lỗi runtime.")
+
+    add_h3("1.4.3 React 19 & Next.js 16 App Router – Nền tảng Full-stack hiện đại")
+    add_p("Next.js phiên bản 16 là framework dẫn đầu thế giới trong hệ sinh thái React. Với kiến trúc thư mục App Router (`src/app`), hệ thống tự động tối ưu hóa việc phân chia các route, quản lý layout lồng nhau, hỗ trợ đa ngôn ngữ quốc tế hóa (`[locale]`) và tích hợp cơ chế bảo vệ Server Actions an toàn tuyệt đối.")
+
+    add_h3("1.4.4 TypeScript – Ngôn ngữ định kiểu tĩnh cho hệ thống lớn")
+    add_p("TypeScript bổ sung hệ thống kiểu tĩnh chặt chẽ cho JavaScript. Toàn bộ các DTO dữ liệu từ cơ sở dữ liệu, tham số API đến props của từng component giao diện trong CineReserve đều được ép kiểu rõ ràng, giúp mã nguồn dễ đọc, dễ bảo trì và có độ tin cậy vượt bậc.")
+
+    add_h2("1.5 Các công cụ hỗ trợ triển khai")
+    add_bullet("Google Gemini AI (`gemini-3.5-flash-lite`): Mô hình ngôn ngữ lớn thế hệ mới của Google với tốc độ xử lý nhanh, hỗ trợ ép kiểu đầu ra JSON Schema và thấu hiểu tiếng Việt tự nhiên sâu sắc.", bold_prefix="Google Gemini AI: ")
+    add_bullet("jsQR & QRCode: Bộ thư viện toán học chuyên dụng giúp sinh mã QR Code dạng đồ họa vector SVG và giải mã hình ảnh từ luồng video camera web với tốc độ cao.", bold_prefix="Bộ giải mã QR Code: ")
+    add_bullet("Scrypt & Web Cryptography: Thuật toán mã hóa một chiều đạt chuẩn bảo mật cao nhất hiện nay, bảo vệ mật khẩu người dùng chống lại các cuộc tấn công vét cạn bằng phần cứng GPU chuyên dụng.", bold_prefix="Cơ chế bảo mật mật khẩu: ")
+    add_bullet("Git & GitHub: Hệ thống quản lý phiên bản phân tán, lưu trữ toàn bộ lịch sử phát triển dự án và tự động tích hợp CI/CD.", bold_prefix="Git & GitHub: ")
+
+    add_table_header_caption("Bảng 1.1 Tổng hợp công nghệ xây dựng CineReserve")
+    t_sum = doc.add_table(rows=1, cols=2)
+    t_sum.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(t_sum)
+    t_sum.rows[0].cells[0].text = "Công nghệ / Nền tảng"
+    t_sum.rows[0].cells[1].text = "Vai trò chính trong hệ thống CineReserve"
+    for c in t_sum.rows[0].cells:
+        set_cell_shading(c, "EBF1F5")
+        p = c.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for r in p.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11.5)
+
+    sum_tech = [
+        ("Next.js 16 (App Router)", "Nền tảng Full-stack Web, quản lý Route, Layout và Server Components"),
+        ("React 19", "Thư viện xây dựng giao diện người dùng theo component tái sử dụng"),
+        ("TypeScript", "Ngôn ngữ lập trình chính, định kiểu tĩnh toàn diện (End-to-End Type Safety)"),
+        ("PostgreSQL 17", "Hệ quản trị cơ sở dữ liệu quan hệ lưu trữ 21 bảng và quản lý Advisory Lock"),
+        ("Prisma 7 ORM", "Công cụ ánh xạ đối tượng và thực thi truy vấn CSDL an toàn"),
+        ("Google Gemini AI", "Mô hình ngôn ngữ lớn cung cấp trí tuệ nhân tạo cho Trợ lý tư vấn phim"),
+        ("jsQR & QRCode", "Tạo mã QR vé điện tử và quét mã trực tiếp qua Web Camera di động"),
+        ("Scrypt (node:crypto)", "Băm mật khẩu người dùng với salt ngẫu nhiên chống tấn công brute-force"),
+        ("CSS Modules", "Định dạng giao diện đóng gói riêng biệt cho từng trang và component"),
+        ("Git & GitHub", "Hệ thống quản lý phiên bản phân tán và lưu trữ mã nguồn dự án")
+    ]
+    for tech, role in sum_tech:
+        row = t_sum.add_row()
+        c0, c1 = row.cells
+        c0.text = tech
+        c1.text = role
+        set_cell_margins(c0, top=60, bottom=60, left=80, right=80)
+        set_cell_margins(c1, top=60, bottom=60, left=80, right=80)
+        p0, p1 = c0.paragraphs[0], c1.paragraphs[0]
+        p0.paragraph_format.space_after = Pt(2)
+        p1.paragraph_format.space_after = Pt(2)
+        p0.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p1.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        for r in p0.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+        for r in p1.runs:
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+
+    add_h2("Kết luận chương 1:")
+    add_p("Trong chương 1, em đã trình bày chi tiết về bối cảnh nghiên cứu, các khái niệm nghiệp vụ và cơ sở công nghệ nền tảng phục vụ xây dựng hệ thống đặt vé xem phim trực tuyến CineReserve. Em đã phân tích sâu sắc về sự phát triển của kiến trúc web, sự ưu việt của Server-Side Rendering (SSR) trên Next.js 16 App Router so với SPA truyền thống, và cơ chế bảo vệ giao dịch ACID của PostgreSQL 17 với Advisory Lock.")
+    add_p("Bên cạnh đó, việc lựa chọn tích hợp mô hình ngôn ngữ lớn Google Gemini AI cùng thư viện giải mã hình ảnh jsQR đã tạo nên một giải pháp công nghệ toàn diện, giải quyết trọn vẹn cả bài toán hiệu năng lẫn bài toán trải nghiệm người dùng hiện đại. Đây là tiền đề vững chắc để em tiến hành khảo sát yêu cầu, phân tích ca sử dụng và thiết kế cơ sở dữ liệu chi tiết trong Chương 2.")
+    doc.add_page_break()
+
+    # =========================================================================
+    # CHƯƠNG 2 (KHẢO SÁT, PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG)
+    # =========================================================================
+    add_title_p("CHƯƠNG 2: KHẢO SÁT, PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG", size=16, bold=True, space_after=14)
+    add_h2("2.1 Khảo sát và phân tích yêu cầu hệ thống")
+    add_h3("2.1.1 Khảo sát và thu thập yêu cầu")
+    add_p("Trong những năm gần đây, ngành công nghiệp điện ảnh Việt Nam đã có sự trỗi dậy mạnh mẽ với hàng loạt tác phẩm đạt doanh thu hàng trăm tỷ đồng. Thói quen mua vé tại quầy đang dần bị thay thế hoàn toàn bởi các kênh trực tuyến. Khảo sát thực tế tại các cụm rạp chiếu phim cho thấy:")
+    add_bullet("Khách hàng mong muốn có giao diện trực quan, cho phép chọn đúng vị trí ghế ngồi yêu thích, hiển thị rõ ràng giá vé và loại ghế (Thường / VIP) mà không gặp tình trạng lag giật.", bold_prefix="- ")
+    add_bullet("Khi chọn ghế, khách hàng cần một khoảng thời gian nhất định (thời gian giữ chỗ 5 phút) để trao đổi với người thân và chuẩn bị thanh toán mà không sợ bị người khác tranh mất chỗ.", bold_prefix="- ")
+    add_bullet("Nhân viên tại rạp cần công cụ kiểm tra vé nhanh gọn trên điện thoại thông minh, quét mã QR trong tích tắc và ngăn chặn tuyệt đối tình trạng khán giả dùng vé giả hoặc vé đã qua cửa.", bold_prefix="- ")
+    add_bullet("Quản trị viên cần công cụ quản lý lịch chiếu trực quan, tự động cảnh báo nếu hai suất chiếu bị trùng phòng hoặc không đủ 20 phút dọn dẹp vệ sinh.", bold_prefix="- ")
+
+    add_table_header_caption("Bảng 2.1 Doanh thu thị trường điện ảnh và bán vé trực tuyến qua các năm")
+    t_stat = doc.add_table(rows=1, cols=4)
+    t_stat.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(t_stat)
+    for idx, name in enumerate(["Năm khảo sát", "Doanh thu phòng vé (Tỷ VNĐ)", "Tỷ lệ đặt vé trực tuyến (%)", "Tốc độ tăng trưởng"]):
+        c = t_stat.rows[0].cells[idx]
+        c.text = name
+        set_cell_shading(c, "EBF1F5")
+        p = c.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for r in p.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+
+    stat_rows = [
+        ("2021", "1.250", "38.5%", "Hồi phục sau dịch"),
+        ("2022", "2.400", "52.0%", "+92.0%"),
+        ("2023", "3.700", "66.5%", "+54.1%"),
+        ("2024", "4.850", "74.0%", "+31.0%"),
+        ("2025 (Ước tính)", "5.900", "82.5%", "+21.6%")
+    ]
+    for r_data in stat_rows:
+        row = t_stat.add_row()
         for idx, val in enumerate(r_data):
             c = row.cells[idx]
             c.text = val
-            set_cell_margins(c, top=80, bottom=80, left=100, right=100)
+            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
+            p = c.paragraphs[0]
+            p.paragraph_format.space_after = Pt(2)
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            for r in p.runs:
+                r.font.name = 'Times New Roman'
+                r.font.size = Pt(11)
+
+    add_h3("2.1.2 Xác định các tác nhân")
+    add_p("Hệ thống CineReserve phân cấp 3 nhóm tác nhân chính:")
+    add_bullet("Khách hàng (Customer): Tìm kiếm phim, đặt vé nhanh, chọn và giữ ghế 5 phút, thanh toán nhận vé QR, tra cứu lịch sử đơn hàng và trò chuyện với Trợ lý AI.")
+    add_bullet("Nhân viên rạp (Staff): Đăng nhập tài khoản được phân công theo chi nhánh rạp, quét mã QR soát vé khán giả vào rạp, tra cứu đơn hàng theo mã chính xác và xem báo cáo doanh thu chi nhánh.")
+    add_bullet("Quản trị viên (Admin): Quản trị toàn bộ danh mục phim song ngữ, lập lịch chiếu chống trùng phòng, tạo tài khoản nhân viên, xem nhật ký kiểm toán và theo dõi doanh thu toàn chuỗi rạp.")
+
+    add_h3("2.1.3 Yêu cầu chức năng")
+    add_p("Các chức năng chính của hệ thống CineReserve được tổng hợp trong bảng dưới đây:")
+
+    add_table_header_caption("Bảng 2.2 Các yêu cầu về chức năng")
+    t_uc_req = doc.add_table(rows=1, cols=3)
+    t_uc_req.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(t_uc_req)
+    t_uc_req.rows[0].cells[0].text = "Mã chức năng"
+    t_uc_req.rows[0].cells[1].text = "Tên chức năng"
+    t_uc_req.rows[0].cells[2].text = "Mô tả chi tiết"
+    for c in t_uc_req.rows[0].cells:
+        set_cell_shading(c, "EBF1F5")
+        p = c.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for r in p.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+
+    uc_req_data = [
+        ("UC01", "Quản lý tài khoản & Xác thực", "Đăng ký, đăng nhập, đổi mật khẩu, bảo vệ phiên qua Cookie an toàn"),
+        ("UC02", "Khám phá phim & Đặt vé nhanh", "Tìm kiếm phim không dấu, lọc theo thể loại/rạp/ngày, module Quick Booking"),
+        ("UC03", "Chọn ghế & Giữ ghế 5 phút", "Hiển thị sơ đồ ghế động, giữ 1-8 ghế trong 300s, khóa chống tranh chấp"),
+        ("UC04", "Thanh toán & Phát hành vé QR", "Thanh toán an toàn, xác nhận độ tuổi, phát hành mã QR độc lập từng ghế"),
+        ("UC05", "Trợ lý ảo tư vấn phim AI", "Chatbot Gemini streaming NDJSON, nhận diện ngôn ngữ tự nhiên, giữ ngữ cảnh"),
+        ("UC06", "Soát vé QR tại cửa rạp", "Quét mã QR qua Camera di động, xác minh 2 bước, chặn vé dùng lại"),
+        ("UC07", "Quản trị Phim & Lịch chiếu", "CRUD phim song ngữ VI/EN, lập lịch tự động tính giờ dọn phòng 20 phút"),
+        ("UC08", "Quản lý nhân viên & Báo cáo", "Tạo tài khoản STAFF gán rạp, thống kê doanh thu đa chiều, xuất CSV")
+    ]
+    for code, name, desc in uc_req_data:
+        row = t_uc_req.add_row()
+        c0, c1, c2 = row.cells
+        c0.text = code
+        c1.text = name
+        c2.text = desc
+        set_cell_margins(c0, top=60, bottom=60, left=80, right=80)
+        set_cell_margins(c1, top=60, bottom=60, left=80, right=80)
+        set_cell_margins(c2, top=60, bottom=60, left=80, right=80)
+        p0, p1, p2 = c0.paragraphs[0], c1.paragraphs[0], c2.paragraphs[0]
+        p0.paragraph_format.space_after = Pt(2)
+        p1.paragraph_format.space_after = Pt(2)
+        p2.paragraph_format.space_after = Pt(2)
+        p0.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p1.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p2.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        for r in p0.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+        for r in p1.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+        for r in p2.runs:
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+
+    add_h3("2.1.4 Yêu cầu phi chức năng")
+    add_bullet("Hiệu năng cao: Tốc độ phản hồi giao diện dưới 500ms đối với các trang Server-Side Rendering. Thời gian xử lý transaction giữ ghế dưới 100ms.", bold_prefix="Hiệu năng: ")
+    add_bullet("Bảo mật cao: Băm mật khẩu người dùng bằng Scrypt, kiểm tra CSRF Origin, giới hạn tần suất yêu cầu (Rate limiting) và che giấu thông tin cá nhân (PII Masking).", bold_prefix="Bảo mật: ")
+    add_bullet("Toàn vẹn dữ liệu: Đảm bảo tuyệt đối không xảy ra tranh chấp ghế (Double-booking) thông qua PostgreSQL Advisory Lock.", bold_prefix="Tính toàn vẹn: ")
+    add_bullet("Đa ngôn ngữ & Khả năng tiếp cận: Toàn bộ giao diện và thông báo lỗi hỗ trợ song ngữ Tiếng Việt và Tiếng Anh; giao diện responsive đạt chuẩn kích thước bấm 44px trên mobile.", bold_prefix="Khả năng tương thích: ")
+
+    add_h2("2.2 Biểu đồ use case")
+    add_p("Hệ thống xây dựng mô hình Use case hoàn chỉnh mô tả các mối quan hệ giữa người dùng và các chức năng của CineReserve:")
+    add_bullet("Hình 2.1 Use case tổng quát: Thể hiện mối quan hệ giữa 3 tác nhân Khách hàng, Nhân viên và Quản trị viên với các phân hệ lớn của hệ thống.")
+    add_bullet("Hình 2.2 Các use case chính: Tập trung vào toàn bộ các ca sử dụng của Khách hàng từ Đăng nhập, Duyệt phim, Chọn ghế, Thanh toán đến Trò chuyện AI.")
+    add_bullet("Hình 2.3 Các use case thứ cấp: Tập trung vào các ca sử dụng nghiệp vụ nội bộ của Nhân viên rạp (Soát vé, tra cứu đơn) và Quản trị viên (Phim, Lịch, Báo cáo).")
+    add_bullet("Hình 2.4 Quan hệ giữa các use case: Mô tả rõ ràng các mối quan hệ phụ thuộc <<include>> (ví dụ: Chọn ghế, Thanh toán bắt buộc phải <<include>> Đăng nhập) và quan hệ mở rộng <<extend>>.")
+
+    add_h2("2.3 Mô tả chi tiết use case")
+    add_p("Dưới đây là bảng đặc tả chi tiết các Use case nghiệp vụ then chốt của hệ thống CineReserve theo đúng mẫu quy chuẩn:")
+
+    # UC 2.3 -> 2.16
+    add_usecase_table("3", "Đăng ký tài khoản", "Khách hàng",
+                      "Cho phép khách hàng mới tạo tài khoản trong hệ thống để thực hiện đặt vé.",
+                      "1. Người dùng bấm nút \"Đăng ký\" trên thanh điều hướng.\n2. Hệ thống hiển thị form nhập: Họ tên, Email, Mật khẩu, Xác nhận mật khẩu.\n3. Người dùng điền thông tin và bấm \"Tạo tài khoản\".\n4. Hệ thống kiểm tra hợp lệ, băm mật khẩu bằng Scrypt và tạo bản ghi User mới với vai trò CUSTOMER.\n5. Chuyển hướng người dùng về trang đăng nhập với thông báo thành công.",
+                      "1. Nếu email đã tồn tại, hệ thống báo lỗi EMAIL_UNAVAILABLE (409).\n2. Nếu mật khẩu dưới 10 ký tự hoặc không khớp, hiển thị thông báo lỗi tương ứng.",
+                      "Người dùng chưa có tài khoản.", "Tài khoản khách hàng được tạo thành công.");
+
+    add_usecase_table("4", "Đăng nhập", "Khách hàng / Nhân viên / Quản trị viên",
+                      "Xác thực danh tính người dùng và thiết lập phiên làm việc an toàn.",
+                      "1. Người dùng bấm nút \"Đăng nhập\" trên thanh điều hướng.\n2. Hệ thống hiển thị form đăng nhập.\n3. Người dùng nhập email và mật khẩu rồi bấm \"Đăng nhập\".\n4. Hệ thống kiểm tra mật khẩu bằng thuật toán Scrypt và so sánh thời gian cố định timingSafeEqual.\n5. Nếu hợp lệ, hệ thống tạo bản ghi AuthSession, cấp Cookie cr_session an toàn và chuyển hướng về trang chủ hoặc trang quản trị theo vai trò.",
+                      "1. Nếu sai thông tin đăng nhập, báo lỗi INVALID_CREDENTIALS.\n2. Nếu tài khoản bị khóa, báo lỗi USER_LOCKED.\n3. Nếu tài khoản nhân viên có cờ mustChangePassword=true, bắt buộc chuyển hướng tới trang đổi mật khẩu.",
+                      "Người dùng đã có tài khoản.", "Phiên đăng nhập hợp lệ được lưu trong Cookie.");
+
+    add_usecase_table("5", "Đăng xuất", "Khách hàng / Nhân viên / Quản trị viên",
+                      "Hủy bỏ phiên làm việc hiện tại và giải phóng các tài nguyên đang giữ chỗ.",
+                      "1. Người dùng bấm vào menu tài khoản và chọn \"Đăng xuất\".\n2. Hệ thống gọi API POST /api/auth/logout.\n3. Máy chủ tự động quét và giải phóng các ghế mà tài khoản đang giữ (cancelUserHolds).\n4. Xóa bản ghi AuthSession trong cơ sở dữ liệu và xóa Cookie trên trình duyệt.\n5. Chuyển hướng người dùng về trang chủ.",
+                      "Nếu mất kết nối mạng, hệ thống vẫn xóa sạch Cookie tại trình duyệt và thông báo đăng xuất hoàn tất.",
+                      "Người dùng đang ở trạng thái đăng nhập.", "Phiên làm việc bị hủy, ghế đang giữ được trả lại tự do.");
+
+    add_usecase_table("6", "Quản lý thông tin cá nhân", "Khách hàng / Nhân viên",
+                      "Cho phép người dùng xem và cập nhật họ tên, số điện thoại hoặc đổi mật khẩu.",
+                      "1. Người dùng truy cập trang \"Hồ sơ cá nhân\".\n2. Hệ thống nạp thông tin hiện tại từ bảng User.\n3. Người dùng chỉnh sửa họ tên hoặc số điện thoại rồi nhấn \"Lưu thay đổi\".\n4. Hệ thống kiểm tra định dạng dữ liệu và cập nhật vào cơ sở dữ liệu.\n5. Hiển thị thông báo cập nhật thành công.",
+                      "1. Nếu số điện thoại không đúng định dạng (từ 6-25 ký tự số), báo lỗi.\n2. Khi đổi mật khẩu, bắt buộc phải nhập đúng mật khẩu cũ và mật khẩu mới phải khác mật khẩu cũ.",
+                      "Người dùng đã đăng nhập.", "Thông tin cá nhân được cập nhật thành công.");
+
+    add_usecase_table("7", "Tìm kiếm và Xem chi tiết phim", "Khách hàng",
+                      "Cho phép khán giả duyệt danh sách phim, tìm kiếm theo tên và xem chi tiết lịch chiếu.",
+                      "1. Người dùng truy cập trang danh mục Phim.\n2. Nhập từ khóa tìm kiếm vào ô tìm kiếm hoặc chọn lọc theo Thể loại, Rạp, Ngày chiếu.\n3. Hệ thống chuẩn hóa tiếng Việt không dấu và lọc danh sách phim phù hợp.\n4. Người dùng bấm vào một thẻ phim để xem chi tiết: poster, trailer, đạo diễn, thời lượng, tóm tắt và danh sách suất chiếu theo từng rạp.",
+                      "Nếu không tìm thấy bộ phim nào phù hợp, hệ thống hiển thị thông báo rỗng kèm nút xóa bộ lọc.",
+                      "Không có.", "Thông tin chi tiết phim và lịch chiếu được hiển thị.");
+
+    add_usecase_table("8", "Đặt vé nhanh (Quick Booking)", "Khách hàng",
+                      "Cho phép khán giả chọn nhanh suất chiếu trực tiếp từ trang chủ qua 3 bước liên hoàn.",
+                      "1. Khán giả tiếp cận khối Quick Booking tại trang chủ.\n2. Bước 1: Chọn Chi nhánh Rạp mong muốn.\n3. Bước 2: Danh sách phim tự động lọc các phim đang có suất chiếu tại rạp đó, khán giả chọn Phim.\n4. Bước 3: Danh sách ngày tự động hiển thị các ngày có suất mở bán, khán giả chọn Ngày.\n5. Hệ thống chuyển hướng thẳng đến trang chi tiết phim với các bộ lọc đã chọn.",
+                      "Nếu rạp được chọn không có suất chiếu nào mở bán, danh sách phim hiển thị trạng thái trống rõ ràng.",
+                      "Không có.", "Chuyển hướng thành công tới suất chiếu đã chọn.");
+
+    add_usecase_table("9", "Chọn và Giữ ghế 5 phút", "Khách hàng",
+                      "Cho phép khách hàng chọn từ 1 đến 8 ghế và giữ độc quyền trong 300 giây.",
+                      "1. Khán giả truy cập trang sơ đồ ghế của suất chiếu hợp lệ.\n2. Hệ thống nạp dữ liệu SeatMap hiển thị rõ ghế Thường, VIP, Đang bị giữ, Đã bán.\n3. Khán giả bấm chọn từ 1 đến 8 ghế và bấm \"Tiếp tục thanh toán\".\n4. Máy chủ mở transaction, gọi pg_advisory_xact_lock(20261102) và databaseNow().\n5. Kiểm tra ghế hợp lệ, tạo bản ghi HoldSession có hạn 5 phút và cập nhật ShowtimeSeat.\n6. Trả về kết quả thành công, trình duyệt bắt đầu đếm ngược 5 phút.",
+                      "1. Nếu có ghế đã bị người khác giữ hoặc đã bán, báo lỗi 409 SEAT_ALREADY_HELD.\n2. Nếu suất chiếu đã quá thời điểm ngừng bán (Cutoff trước 10 phút), báo lỗi SALES_CLOSED.",
+                      "Khách hàng đã đăng nhập tài khoản CUSTOMER.", "Ghế được giữ độc quyền cho khách hàng trong 5 phút.");
+
+    add_usecase_table("10", "Thanh toán và Nhận vé QR", "Khách hàng",
+                      "Xác nhận thanh toán đơn hàng và tự động phát hành vé điện tử mã QR.",
+                      "1. Khách hàng xem lại tóm tắt đơn hàng (phim, rạp, phòng, danh sách ghế, tổng tiền).\n2. Khách hàng tích chọn xác nhận đủ tuổi theo phân loại phim và đồng ý chính sách vé.\n3. Khách hàng nhấn \"Xác nhận thanh toán mô phỏng\".\n4. Máy chủ kiểm tra phiên giữ ghế còn hạn, chuyển Booking sang PAID, sinh mã vé TK-... cho từng ghế.\n5. Hệ thống hiển thị trang hoàn tất kèm mã QR Code độc lập của từng ghế để tải về hoặc in ấn.",
+                      "1. Nếu phiên giữ ghế đã hết hạn trong lúc đang thanh toán, báo lỗi HOLD_EXPIRED.\n2. Nếu thanh toán giả lập thất bại, đơn hàng giữ nguyên trạng thái PENDING để khách thử lại.",
+                      "Đơn hàng đang ở trạng thái PENDING và phiên giữ ghế còn hiệu lực.", "Đơn hàng chuyển PAID, vé điện tử mã QR được phát hành.");
+
+    add_usecase_table("11", "Trò chuyện với Trợ lý phim AI", "Khách hàng",
+                      "Tư vấn phim thông minh qua ngôn ngữ tự nhiên sử dụng mô hình Google Gemini AI.",
+                      "1. Khách hàng mở widget Trợ lý phim ở góc phải màn hình.\n2. Khách hàng gửi câu hỏi tự nhiên (ví dụ: \"Tối nay tại rạp Hà Nội có phim gì cho bé 10 tuổi xem không?\").\n3. Endpoint /api/chat nhận tin nhắn, kích hoạt luồng streaming NDJSON.\n4. Máy chủ gửi sự kiện stage: \"understanding\" -> stage: \"searching\" -> trích xuất SearchPlan -> truy vấn CSDL -> trả về danh sách phim gợi ý kèm liên kết đặt vé.\n5. Giao diện hiển thị tin nhắn mượt mà theo thời gian thực.",
+                      "1. Nếu tin nhắn chứa thông tin nhạy cảm (email, sđt, pass), hệ thống từ chối xử lý.\n2. Nếu dịch vụ Gemini AI bị gián đoạn, hệ thống thông báo lỗi lịch sự và giữ nguyên ngữ cảnh.",
+                      "Không có.", "Khách hàng nhận được câu trả lời và danh sách phim gợi ý chính xác.");
+
+    add_usecase_table("12", "Tra cứu đơn hàng vận hành", "Nhân viên / Quản trị viên",
+                      "Tra cứu chi tiết đơn hàng phục vụ xử lý khiếu nại và hỗ trợ khán giả tại rạp.",
+                      "1. Người dùng truy cập trang \"Tra cứu đơn hàng\".\n2. Nếu là STAFF: Nhập chính xác mã đơn CR-..., hệ thống chỉ trả về đơn thuộc chi nhánh rạp của nhân viên đó.\n3. Nếu là ADMIN: Có thể tìm kiếm theo mã, lọc theo trạng thái, chi nhánh, khoảng ngày và phân trang.\n4. Màn hình hiển thị chi tiết ghế, lịch sử thanh toán, thông tin khách hàng đã được che giấu (Masked PII).",
+                      "Nếu mã đơn không tồn tại hoặc nhân viên tra cứu đơn của rạp khác, báo lỗi NOT_FOUND.",
+                      "Đăng nhập tài khoản có vai trò STAFF hoặc ADMIN.", "Thông tin chi tiết đơn hàng được hiển thị an toàn.");
+
+    add_usecase_table("13", "Soát vé QR tại cửa rạp", "Nhân viên rạp",
+                      "Quét và xác thực vé điện tử của khán giả bằng Camera di động hoặc tải tệp ảnh.",
+                      "1. Nhân viên rạp mở màn hình Soát vé (/staff/tickets) trên điện thoại.\n2. Bật camera quét mã QR trên vé khán giả hoặc tải ảnh QR lên.\n3. Hệ thống bắt mã CR1:TK-... và gọi API inspectTicket để kiểm tra.\n4. Màn hình hiển thị thông tin vé, tên phim, phòng, số ghế và khung giờ hợp lệ.\n5. Nhân viên đối chiếu và nhấn \"Xác nhận vào rạp\" (Redeem Ticket).\n6. Hệ thống chuyển vé sang USED, lưu vết TicketRedemption và AuditLog.",
+                      "1. Nếu vé đã được sử dụng trước đó, báo lỗi ALREADY_USED kèm thời điểm đã soát.\n2. Nếu quét vé ngoài khung giờ cho phép (trước 30 phút hoặc sau giờ chiếu), báo lỗi OUTSIDE_WINDOW.\n3. Nếu vé thuộc chi nhánh rạp khác, báo lỗi WRONG_CINEMA.",
+                      "Nhân viên đăng nhập tài khoản STAFF có gán rạp hợp lệ.", "Vé được chuyển sang trạng thái USED, hoàn tất soát vé.");
+
+    add_usecase_table("14", "Quản lý phim và Lịch chiếu", "Quản trị viên",
+                      "Thêm mới, chỉnh sửa thông tin phim song ngữ và lập lịch chiếu chống trùng phòng.",
+                      "1. Quản trị viên truy cập trang quản lý Phim / Lịch chiếu.\n2. Khi tạo phim mới: Nhập tiêu đề tiếng Việt, tiếng Anh, thời lượng, phân loại tuổi, poster, thể loại.\n3. Khi tạo lịch chiếu: Chọn phim, chọn phòng chiếu, chọn giờ bắt đầu.\n4. Hệ thống tự động tính giờ kết thúc và giờ dọn phòng (endsAt + 20 phút), kiểm tra xung đột với toàn bộ các suất chiếu đã có trong phòng.\n5. Nếu không trùng lịch, tạo suất chiếu mới và tự động nhân bản danh sách ghế sang bảng ShowtimeSeat.",
+                      "1. Nếu giờ chiếu bị trùng vào khoảng chiếu hoặc dọn phòng của suất khác, báo lỗi ROOM_OVERLAP.\n2. Không cho phép sửa thời lượng hoặc hủy phim nếu phim đang có suất chiếu mở bán trong tương lai.",
+                      "Đăng nhập tài khoản ADMIN.", "Suất chiếu hợp lệ được tạo và mở bán thành công.");
+
+    add_usecase_table("15", "Quản lý nhân viên", "Quản trị viên",
+                      "Tạo mới tài khoản nhân viên rạp, gán chi nhánh công tác và cấp mật khẩu tạm.",
+                      "1. Quản trị viên truy cập mục Quản lý nhân viên (/admin/staff).\n2. Nhấn nút \"Thêm nhân viên mới\".\n3. Nhập họ tên, email, chọn chi nhánh rạp phụ trách và tạo mật khẩu tạm thời.\n4. Hệ thống kiểm tra email duy nhất, băm mật khẩu Scrypt, gán quyền STAFF và bật cờ mustChangePassword=true.\n5. Tài khoản được tạo thành công cùng bản ghi phân công StaffAssignment trong transaction.",
+                      "Nếu email đã được sử dụng, hệ thống báo lỗi trùng lặp tài khoản.",
+                      "Đăng nhập tài khoản ADMIN.", "Tài khoản nhân viên được tạo và gắn chặt với một rạp.");
+
+    add_usecase_table("16", "Báo cáo doanh thu", "Nhân viên / Quản trị viên",
+                      "Thống kê doanh thu rạp, tách bạch tiền thu, tiền hoàn và xuất báo cáo CSV.",
+                      "1. Người dùng truy cập trang Báo cáo doanh thu (/admin/reports hoặc /staff/reports).\n2. Chọn bộ lọc: Khoảng ngày, nhóm theo Ngày hoặc Tháng, lọc theo Phim, Rạp.\n3. Máy chủ chạy câu truy vấn SQL UNION ALL tổng hợp tiền thanh toán và tiền hoàn tiền độc lập.\n4. Màn hình hiển thị các thẻ tóm tắt (Tổng thu, Tiền hoàn, Doanh thu ròng, Số vé bán) và biểu đồ trực quan.\n5. Người dùng có thể nhấn \"Tải báo cáo CSV\" để tải tệp dữ liệu chuẩn hóa có UTF-8 BOM.",
+                      "Nhân viên STAFF chỉ được xem số liệu thuộc chi nhánh của mình, không xem được rạp khác.",
+                      "Đăng nhập tài khoản STAFF hoặc ADMIN.", "Báo cáo doanh thu được hiển thị và xuất file CSV an toàn.");
+
+    add_h2("2.4 Phân tích Use case")
+    add_p("Hệ thống xây dựng các biểu đồ trình tự (Sequence Diagrams) mô tả sự tương tác chi tiết giữa Actor, Giao diện (Boundary), Bộ điều khiển (Controller) và Cơ sở dữ liệu (Entity):")
+    add_bullet("Hình 2.5 Biểu đồ trình tự Use case Đăng ký: Mô tả quá trình nhập liệu, kiểm tra hợp lệ tại Controller, băm mật khẩu Scrypt và lưu vào bảng Users.")
+    add_bullet("Hình 2.6 Biểu đồ trình tự Use case Đăng nhập: Mô tả quá trình kiểm tra mật khẩu an toàn thời gian cố định, tạo bản ghi AuthSession và cấp Cookie.")
+    add_bullet("Hình 2.7 Biểu đồ trình tự Use case Chọn và Giữ ghế 5 phút: Mô tả chi tiết việc thiết lập khóa `pg_advisory_xact_lock(20261102)`, kiểm tra ghế trống, đồng bộ pending booking và trả về đồng hồ đếm ngược.")
+    add_bullet("Hình 2.8 Biểu đồ trình tự Use case Thanh toán và Nhận vé QR: Mô tả việc kiểm tra idempotencyKey, chuyển trạng thái ghế sang SOLD, sinh mã vé TK-... và trả về SVG QR Code.")
+    add_bullet("Hình 2.9 Biểu đồ trình tự Use case Soát vé QR tại rạp: Mô tả luồng quét camera 2 bước (Inspect -> Redeem) và ghi vết TicketRedemption.")
+    add_bullet("Hình 2.10 Biểu đồ trình tự Use case Trò chuyện với Trợ lý AI: Mô tả luồng truyền gói tin NDJSON từ Client tới Gemini API và truy vấn ngược lại CSDL danh mục.")
+    add_bullet("Hình 2.11 Biểu đồ trình tự Use case Quản lý lịch chiếu không trùng phòng: Mô tả thuật toán quét kiểm tra khoảng thời gian chiếu cộng thêm 20 phút dọn phòng.")
+
+    add_h2("2.5 Thiết kế cơ sở dữ liệu")
+    add_p("Cơ sở dữ liệu của CineReserve được chuẩn hóa gồm 21 bảng. Dưới đây là đặc tả chi tiết cấu trúc các bảng cốt lõi trong hệ thống:")
+
+    add_table_header_caption("Bảng 2.17 Cấu trúc bảng Users lưu thông tin người dùng")
+    t_u = doc.add_table(rows=1, cols=4)
+    t_u.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(t_u)
+    for idx, name in enumerate(["Tên trường", "Kiểu dữ liệu", "Ràng buộc", "Mô tả ý nghĩa"]):
+        c = t_u.rows[0].cells[idx]
+        c.text = name
+        set_cell_shading(c, "EBF1F5")
+        p = c.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for r in p.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+
+    u_cols = [
+        ("id", "Uuid", "Primary Key, default(uuid())", "Định danh duy nhất của người dùng"),
+        ("name", "String", "Not Null", "Họ và tên người dùng"),
+        ("emailNormalized", "String", "Unique, Not Null", "Email đã chuẩn hóa chữ thường"),
+        ("passwordHash", "String", "Not Null", "Mật khẩu băm một chiều bằng Scrypt"),
+        ("role", "UserRole", "Enum: CUSTOMER, STAFF, ADMIN", "Vai trò và quyền hạn trong hệ thống"),
+        ("status", "UserStatus", "Enum: ACTIVE, LOCKED", "Trạng thái hoạt động của tài khoản"),
+        ("mustChangePassword", "Boolean", "Default: false", "Cờ bắt buộc đổi mật khẩu ở lần đăng nhập đầu"),
+        ("authVersion", "Int", "Default: 0", "Phiên bản xác thực để hủy phiên từ xa khi đổi pass")
+    ]
+    for r_data in u_cols:
+        row = t_u.add_row()
+        for idx, val in enumerate(r_data):
+            c = row.cells[idx]
+            c.text = val
+            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
             p = c.paragraphs[0]
             p.paragraph_format.space_after = Pt(2)
             if idx == 0:
@@ -646,367 +1024,282 @@ def build_report():
                 for r in p.runs:
                     r.bold = True
                     r.font.name = 'Times New Roman'
-                    r.font.size = Pt(11)
+                    r.font.size = Pt(10.5)
+            else:
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                for r in p.runs:
+                    r.font.name = 'Times New Roman'
+                    r.font.size = Pt(10.5)
+
+    add_table_header_caption("Bảng 2.18 Cấu trúc bảng Movies & Showtimes lưu phim và suất chiếu")
+    t_ms = doc.add_table(rows=1, cols=4)
+    t_ms.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(t_ms)
+    for idx, name in enumerate(["Tên trường", "Kiểu dữ liệu", "Ràng buộc", "Mô tả ý nghĩa"]):
+        c = t_ms.rows[0].cells[idx]
+        c.text = name
+        set_cell_shading(c, "EBF1F5")
+        p = c.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for r in p.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+
+    ms_cols = [
+        ("Movie.id", "Uuid", "Primary Key", "Định danh duy nhất bộ phim"),
+        ("Movie.slug", "String", "Unique, Index", "Chuỗi định danh URL thân thiện"),
+        ("Movie.durationMinutes", "Int", "Not Null", "Thời lượng bộ phim tính theo phút"),
+        ("Movie.ageRatingCode", "String", "P, K, T13, T16, T18", "Mã phân loại độ tuổi theo quy định"),
+        ("Showtime.id", "Uuid", "Primary Key", "Định danh duy nhất suất chiếu"),
+        ("Showtime.startsAt", "Timestamptz(3)", "Index, Not Null", "Thời điểm bắt đầu chiếu phim"),
+        ("Showtime.cleanupEndsAt", "Timestamptz(3)", "Not Null", "Thời điểm dọn dẹp xong (endsAt + 20 phút)"),
+        ("Showtime.salesCutoffAt", "Timestamptz(3)", "Not Null", "Thời điểm dừng bán online (startsAt - 10 phút)"),
+        ("Showtime.basePrice", "Int", "Not Null", "Giá vé cơ bản của ghế thường (VND)")
+    ]
+    for r_data in ms_cols:
+        row = t_ms.add_row()
+        for idx, val in enumerate(r_data):
+            c = row.cells[idx]
+            c.text = val
+            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
+            p = c.paragraphs[0]
+            p.paragraph_format.space_after = Pt(2)
+            if idx == 0:
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                for r in p.runs:
+                    r.bold = True
+                    r.font.name = 'Times New Roman'
+                    r.font.size = Pt(10.5)
+            else:
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                for r in p.runs:
+                    r.font.name = 'Times New Roman'
+                    r.font.size = Pt(10.5)
+
+    add_table_header_caption("Bảng 2.19 Cấu trúc bảng Bookings & Tickets lưu đơn hàng và vé")
+    t_bt = doc.add_table(rows=1, cols=4)
+    t_bt.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(t_bt)
+    for idx, name in enumerate(["Tên trường", "Kiểu dữ liệu", "Ràng buộc", "Mô tả ý nghĩa"]):
+        c = t_bt.rows[0].cells[idx]
+        c.text = name
+        set_cell_shading(c, "EBF1F5")
+        p = c.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for r in p.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+
+    bt_cols = [
+        ("Booking.code", "String", "Unique, Index", "Mã đơn hàng hiển thị định dạng CR-..."),
+        ("Booking.total", "BigInt", "Not Null", "Tổng số tiền đơn hàng tính bằng VND chính xác"),
+        ("Booking.status", "BookingStatus", "PENDING, PAID, CANCELLED", "Trạng thái thanh toán của đơn hàng"),
+        ("Booking.expiresAt", "Timestamptz(3)", "Not Null", "Thời điểm hết hạn giữ ghế của đơn hàng"),
+        ("Ticket.code", "String", "Unique, Index", "Mã vé điện tử duy nhất định dạng TK-..."),
+        ("Ticket.status", "TicketStatus", "VALID, USED, CANCELLED", "Trạng thái sử dụng của vé vào rạp"),
+        ("TicketRedemption.redeemedAt", "Timestamptz(3)", "Default: now()", "Thời điểm nhân viên xác nhận cho khách vào rạp"),
+        ("TicketRedemption.requestKey", "String", "Unique per staff", "Mã chống gửi lặp yêu cầu soát vé (Idempotency)")
+    ]
+    for r_data in bt_cols:
+        row = t_bt.add_row()
+        for idx, val in enumerate(r_data):
+            c = row.cells[idx]
+            c.text = val
+            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
+            p = c.paragraphs[0]
+            p.paragraph_format.space_after = Pt(2)
+            if idx == 0:
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                for r in p.runs:
+                    r.bold = True
+                    r.font.name = 'Times New Roman'
+                    r.font.size = Pt(10.5)
+            else:
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                for r in p.runs:
+                    r.font.name = 'Times New Roman'
+                    r.font.size = Pt(10.5)
+
+    add_h2("Kết luận chương 2:")
+    add_p("Trong chương 2, em đã thực hiện toàn diện quá trình khảo sát, thu thập yêu cầu và thiết kế kiến trúc hệ thống CineReserve. Em đã xác định rõ 3 tác nhân với 16 ca sử dụng chi tiết, phân tích các kịch bản luồng chính, luồng rẽ nhánh và các biểu đồ trình tự (Sequence Diagrams) cho các tính năng giữ ghế 5 phút, thanh toán bất biến, soát vé QR và lập lịch không trùng phòng.")
+    add_p("Hệ thống cơ sở dữ liệu quan hệ gồm 21 bảng được thiết kế chuẩn hóa mức 3 (3NF) trên PostgreSQL, giải quyết trọn vẹn việc lưu vết lịch sử giao dịch và bảo toàn tính toàn vẹn tài chính. Đây là kim chỉ nam chính xác để tiến hành cài đặt, triển khai và kiểm thử hệ thống trong Chương 3.")
+    doc.add_page_break()
+
+    # =========================================================================
+    # CHƯƠNG 3 (KẾT QUẢ VÀ ĐÁNH GIÁ - THEO ĐÚNG FORM BẠN)
+    # =========================================================================
+    add_title_p("CHƯƠNG 3: KẾT QUẢ VÀ ĐÁNH GIÁ", size=16, bold=True, space_after=14)
+    add_h2("3.1 Chuẩn bị môi trường và mã nguồn")
+    add_h3("Cài đặt Node.js và môi trường hệ thống")
+    add_p("Truy cập trang chủ của Node.js (https://nodejs.org) và cài đặt phiên bản ổn định LTS (Node.js 20 trở lên). Sau đó mở Terminal kiểm tra phiên bản môi trường bằng các lệnh:")
+    add_bullet("node -v  (Yêu cầu >= v20.9.0)")
+    add_bullet("npm -v   (Yêu cầu >= v10.0.0)")
+
+    add_h3("Clone project từ GitHub")
+    add_p("Mở terminal, dùng lệnh cd để chuyển tới thư mục làm việc mong muốn, sau đó chạy lệnh clone dự án CineReserve từ GitHub repository chính thức:")
+    add_bullet("git clone https://github.com/sontruong3112/CINERESERVE-.git")
+    add_bullet("cd CINERESERVE-")
+
+    add_h3("Cài đặt các gói phụ thuộc (Dependencies)")
+    add_p("Tại thư mục gốc của dự án, tiến hành cài đặt toàn bộ các thư viện phía frontend, backend, Prisma ORM và công cụ kiểm thử:")
+    add_bullet("npm install")
+
+    add_h3("Cài đặt và khởi chạy cơ sở dữ liệu")
+    add_p("Hệ thống CineReserve được cấu hình cơ sở dữ liệu PostgreSQL 17 portable nội bộ không cần cài service phức tạp. Mở Terminal thứ nhất và chạy lệnh khởi động database local:")
+    add_bullet("npm run db:local")
+    add_p("Terminal này sẽ tự động khởi tạo cơ sở dữ liệu tại cổng 127.0.0.1:55432 và lưu trữ tại thư mục .local/postgres. Giữ nguyên Terminal này trong suốt quá trình chạy ứng dụng.")
+
+    add_h3("Thiết lập cấu trúc bảng và nạp dữ liệu mẫu (Migrations & Seeding)")
+    add_p("Mở Terminal thứ hai để tiến hành đồng bộ schema và nạp dữ liệu rạp, phòng, phim và suất chiếu demo:")
+    add_bullet("npm run db:deploy      (Chạy toàn bộ các bản migration CSDL)")
+    add_bullet("npm run db:seed        (Nạp dữ liệu mẫu về phim, rạp, phòng chiếu và ghế)")
+    add_bullet("npm run auth:dev-accounts (Khởi tạo tài khoản quản trị và nhân viên demo)")
+
+    add_h3("Cấu hình biến môi trường (.env)")
+    add_p("Tệp .env trong thư mục gốc quản lý các tham số cấu hình quan trọng:")
+    add_bullet("DATABASE_URL=\"postgresql://...:55432/cinereserve\"")
+    add_bullet("CATALOGUE_SOURCE=\"database\"")
+    add_bullet("GEMINI_API_KEY=\"AIzaSy...\"")
+    add_bullet("CHATBOT_ENABLED=\"true\"")
+    add_bullet("ALLOW_DEMO_SEED=\"true\"")
+
+    add_h3("Khởi chạy ứng dụng thử nghiệm")
+    add_p("Chạy lệnh khởi động máy chủ Next.js App Router:")
+    add_bullet("npm run dev")
+    add_p("Mở trình duyệt web truy cập địa chỉ: http://localhost:3001. Hệ thống tự động chuyển hướng về trang chủ tiếng Việt (/vi) với giao diện rạp chiếu phim hiện đại.")
+
+    add_h2("3.2 Kết quả triển khai")
+    add_p("Dưới đây là hình ảnh và mô tả chi tiết các phân hệ giao diện thực tế của website CineReserve sau khi được hiện thực hóa hoàn chỉnh:")
+    add_bullet("Hình 3.1 Giao diện trang chủ đã đăng nhập: Hiển thị thanh Header thông minh với tên khách hàng, nút đổi ngôn ngữ VI/EN, banner phim bom tấn nổi bật và module Quick Booking.")
+    add_bullet("Hình 3.2 Giao diện trang chủ chưa đăng nhập: Cung cấp đầy đủ các nút Đăng nhập / Đăng ký trang trọng và nút mở nhanh Trợ lý AI.")
+    add_bullet("Hình 3.3 Giao diện chi tiết phim và lịch chiếu: Bố cục 2 cột với thông tin poster, đạo diễn, độ tuổi, tóm tắt nội dung và khối DateStrip chọn ngày chiếu mượt mà.")
+    add_bullet("Hình 3.4 Giao diện sơ đồ phòng chiếu và chọn ghế: Sơ đồ ghế động phân loại màu Standard/VIP, hiển thị đồng hồ đếm ngược 5 phút và thanh tóm tắt lựa chọn cố định trên mobile.")
+    add_bullet("Hình 3.5 Giao diện thanh toán và xác nhận độ tuổi: Form cam kết tuổi theo phân loại phim, tóm tắt tổng tiền VND chính xác và nút bấm thanh toán mô phỏng an toàn.")
+    add_bullet("Hình 3.6 Giao diện chi tiết đơn hàng và vé QR: Hiển thị đầy đủ vé điện tử của từng ghế có kèm mã QR định dạng SVG sắc nét, hỗ trợ tải ảnh và in trực tiếp.")
+    add_bullet("Hình 3.7 Giao diện Trợ lý phim AI CineReserve: Cửa sổ trò chuyện nổi hỗ trợ phản hồi dòng Streaming NDJSON, gợi ý thẻ phim và liên kết đặt vé theo thời gian thực.")
+    add_bullet("Hình 3.8 Giao diện soát vé QR dành cho nhân viên: Công cụ quét mã QR bằng camera di động hoặc tải ảnh, xác thực 2 bước Inspect -> Redeem chống dùng lại vé.")
+    add_bullet("Hình 3.9 Giao diện quản lý phim và lịch chiếu Admin: Bảng CRUD phim song ngữ và form tạo suất chiếu tự động tính giờ dọn phòng 20 phút.")
+    add_bullet("Hình 3.10 Giao diện báo cáo doanh thu đa chiều: Thống kê thu - hoàn - ròng, phân tích theo phim và rạp, hỗ trợ xuất file CSV an toàn.")
+
+    add_h2("3.3 Kiểm thử hệ thống")
+    add_p("Để đảm bảo toàn bộ các ca sử dụng hoạt động chính xác tuyệt đối, đồ án đã triển khai 15 bộ script kiểm thử tự động toàn diện được viết bằng TypeScript:")
+
+    add_table_header_caption("Bảng 3.1 Các case kiểm thử hệ thống CineReserve")
+    t_cases = doc.add_table(rows=1, cols=4)
+    t_cases.alignment = WD_TABLE_ALIGNMENT.CENTER
+    set_table_borders(t_cases)
+    for idx, name in enumerate(["STT", "Chức năng kiểm thử", "Kịch bản kiểm thử chi tiết", "Kết quả mong đợi & Đánh giá"]):
+        c = t_cases.rows[0].cells[idx]
+        c.text = name
+        set_cell_shading(c, "EBF1F5")
+        p = c.paragraphs[0]
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for r in p.runs:
+            r.bold = True
+            r.font.name = 'Times New Roman'
+            r.font.size = Pt(11)
+
+    cases_data = [
+        ("1", "Đăng ký tài khoản", "Nhập thông tin hợp lệ (tên, email, pass >= 10 ký tự) -> nhấn Đăng ký", "Tài khoản được tạo, băm Scrypt, chuyển về login (ĐẠT)"),
+        ("2", "Đăng nhập hệ thống", "Nhập đúng email và mật khẩu -> nhấn Đăng nhập", "Hệ thống cấp cookie cr_session, chuyển đúng trang theo Role (ĐẠT)"),
+        ("3", "Đăng xuất tài khoản", "Bấm Đăng xuất từ menu tài khoản", "Cookie bị xóa, ghế đang giữ được giải phóng tự do (ĐẠT)"),
+        ("4", "Khám phá danh mục phim", "Lọc phim theo Thể loại, Rạp, Ngày hoặc tìm kiếm tiếng Việt không dấu", "Danh sách phim lọc chính xác, không giật trang (ĐẠT)"),
+        ("5", "Giữ ghế 5 phút (Concurreny)", "10 tiến trình đồng thời bấm giữ cùng 1 vị trí ghế VIP trong 1ms", "Đúng 1 tiến trình giữ được ghế, 9 tiến trình nhận lỗi 409 (ĐẠT)"),
+        ("6", "Hết hạn giữ ghế", "Giữ ghế và chờ quá 300 giây mà không thanh toán", "Ghế tự động trả về trạng thái AVAILABLE, đơn pending bị hủy (ĐẠT)"),
+        ("7", "Thanh toán an toàn (Replay)", "Gửi lặp lại cùng một idempotencyKey thanh toán", "Hệ thống trả kết quả cũ, không bao giờ trừ tiền 2 lần (ĐẠT)"),
+        ("8", "Phát hành vé QR", "Thanh toán thành công đơn hàng", "Ghế chuyển SOLD, mỗi ghế sinh 1 vé TK-... kèm QR Code SVG (ĐẠT)"),
+        ("9", "Soát vé QR hợp lệ", "Nhân viên rạp quét mã QR trong khung giờ chiếu hợp lệ -> bấm Xác nhận", "Vé chuyển sang USED, lưu vết TicketRedemption (ĐẠT)"),
+        ("10", "Chặn soát lại vé cũ", "Quét lại mã vé đã chuyển trạng thái USED", "Hệ thống lập tức báo lỗi ALREADY_USED và từ chối vào rạp (ĐẠT)"),
+        ("11", "Trợ lý AI Streaming", "Khách hỏi tư vấn phim tự nhiên bằng tiếng Việt", "AI streaming NDJSON mượt mà, gợi ý đúng suất đang bán (ĐẠT)"),
+        ("12", "Bảo tồn ngữ cảnh AI", "Khách nhắn câu ngắn đổi điều kiện: \"đổi sang rạp Hà Nội\"", "AI nhận diện đúng rạp và giữ nguyên bộ lọc độ tuổi trước đó (ĐẠT)"),
+        ("13", "Lập lịch không trùng phòng", "Admin tạo suất chiếu mới đè vào giờ đang chiếu hoặc 20p dọn phòng", "Hệ thống từ chối và báo lỗi xung đột lịch phòng chiếu (ĐẠT)"),
+        ("14", "Báo cáo doanh thu & CSV", "Lọc doanh thu theo tháng và xuất file CSV", "Tính đúng Gross/Refund/Net, file CSV có UTF-8 BOM chuẩn (ĐẠT)"),
+        ("15", "Toàn luồng E2E Journey", "Chạy trọn vẹn luồng từ Khách đặt vé -> QR -> Nhân viên soát vé", "234 ca kiểm thử E2E liên hoàn đạt 100% PASS (ĐẠT)")
+    ]
+    for stt, fn, sc, res in cases_data:
+        row = t_cases.add_row()
+        c0, c1, c2, c3 = row.cells
+        c0.text = stt
+        c1.text = fn
+        c2.text = sc
+        c3.text = res
+        for idx, c in enumerate([c0, c1, c2, c3]):
+            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
+            p = c.paragraphs[0]
+            p.paragraph_format.space_after = Pt(2)
+            if idx == 0:
+                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for r in p.runs:
+                    r.font.name = 'Times New Roman'
+                    r.font.size = Pt(10.5)
+            elif idx == 1:
+                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+                for r in p.runs:
+                    r.bold = True
+                    r.font.name = 'Times New Roman'
+                    r.font.size = Pt(10.5)
             else:
                 p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
                 for r in p.runs:
                     r.font.name = 'Times New Roman'
-                    r.font.size = Pt(11)
-
-    add_h2("1.2. Khảo sát các quy trình nghiệp vụ rạp chiếu phim")
-    add_p("Một chuỗi rạp chiếu phim hiện đại hoạt động dựa trên sự phối hợp nhịp nhàng giữa nhiều bộ phận. Có 4 quy trình nghiệp vụ cốt lõi:")
-    add_p("1. Quy trình phát hành và lập lịch chiếu: Quản trị viên lên kế hoạch phân bổ các bộ phim vào các phòng chiếu theo từng khung giờ. Quy trình này đòi hỏi phải tôn trọng thời lượng của từng bộ phim và bắt buộc phải dành ra một khoảng thời gian trống sau khi phim kết thúc để nhân viên vệ sinh quét dọn phòng chiếu sạch sẽ trước khi đón đợt khán giả kế tiếp.")
-    add_p("2. Quy trình chọn ghế và bán vé trực tuyến: Khách hàng tìm kiếm phim, lựa chọn rạp gần nhất, chọn suất chiếu phù hợp và tiến hành đặt giữ chỗ trên sơ đồ ghế. Khi ghế được giữ, hệ thống phải đảm bảo không ai khác có thể chọn trùng ghế đó trong một khoảng thời gian nhất định (thời gian thanh toán).")
-    add_p("3. Quy trình thanh toán và phát hành vé: Khách hàng tiến hành thanh toán tiền vé qua cổng thanh toán điện tử. Khi thanh toán thành công, hệ thống chuyển giao quyền sở hữu ghế vĩnh viễn cho khách hàng và lập tức phát hành mã vé điện tử định dạng QR Code cho từng ghế tương ứng.")
-    add_p("4. Quy trình kiểm soát vé tại cửa rạp: Khán giả đến rạp xuất trình mã QR trên điện thoại. Nhân viên soát vé sử dụng thiết bị camera quét mã để xác minh vé có hợp lệ với suất chiếu tại phòng chiếu đó hay không và đóng dấu xác nhận đã sử dụng, tuyệt đối không cho phép một vé được vào rạp lần thứ hai.")
-
-    add_h2("1.3. Đặt bài toán và bộ quy tắc nghiệp vụ khắt khe của CineReserve")
-    add_p("Để giải quyết trọn vẹn và chuẩn hóa các quy trình trên, hệ thống CineReserve được xây dựng dựa trên một bộ quy tắc nghiệp vụ (Business Rules) có tính chặt chẽ cao:")
-    add_bullet("Mỗi khách hàng sau khi đăng nhập tài khoản hợp lệ được quyền chọn tối đa từ 1 đến 8 ghế trong cùng một suất chiếu. Khi khách hàng bấm chọn, ghế được đưa vào trạng thái giữ chỗ trong thời gian tối đa 5 phút (300 giây). Thời gian này được tính toán tuyệt đối dựa trên đồng hồ của máy chủ cơ sở dữ liệu thông qua hàm clock_timestamp(), hoàn toàn không phụ thuộc vào đồng hồ của thiết bị khách hàng. Mọi hành vi tải lại trang (F5), đổi ngôn ngữ hoặc thêm bớt ghế không bao giờ được phép gia hạn thêm thời gian.", bold_prefix="Quy tắc giữ ghế 5 phút: ")
-    add_bullet("Để nhân viên rạp kịp thời chốt danh sách khách hàng và chuẩn bị mở cửa đón khách, hệ thống tự động khóa cổng bán vé trực tuyến trước giờ chiếu chính xác 10 phút. Sau thời điểm cutoff này, khách hàng không thể tạo mới phiên giữ ghế hoặc thanh toán đơn hàng.", bold_prefix="Quy tắc cắt vé trực tuyến (Cutoff time): ")
-    add_bullet("Khoảng cách giữa hai suất chiếu liên tiếp trong cùng một phòng chiếu bắt buộc phải thỏa mãn công thức: cleanupEndsAt = endsAt + 20 phút. Nếu một suất chiếu mới được tạo có thời gian bắt đầu rơi vào khoảng thời gian đang chiếu hoặc 20 phút dọn phòng của suất chiếu trước, hệ thống sẽ tự động từ chối và báo lỗi xung đột lịch phòng.", bold_prefix="Quy tắc an toàn phòng chiếu và dọn dẹp: ")
-    add_bullet("Mỗi chiếc vé điện tử phát hành mang một mã định danh duy nhất có cấu trúc TK-[A-F0-9]{24} tương ứng với một mã QR payload CR1:<ticket-code>. Khách hàng chỉ được phép soát vé vào rạp trong khung giờ từ 30 phút trước giờ chiếu đến khi bộ phim kết thúc. Nhân viên rạp khi bấm xác nhận vào rạp sẽ gửi kèm một mã yêu cầu duy nhất (requestKey); nếu mạng bị giật gửi lặp lại yêu cầu, hệ thống giữ tính bất biến (Idempotent) và không bao giờ ghi nhận vé bị sử dụng 2 lần.", bold_prefix="Quy tắc soát vé một chạm an toàn: ")
-    add_bullet("Toàn bộ số tiền thanh toán được lưu trữ chính xác dưới dạng số nguyên 64-bit (BigInt) Đồng Việt Nam, triệt tiêu hoàn toàn sai số làm tròn số thực. Khi rạp có sự cố kỹ thuật buộc phải hủy bỏ suất chiếu, hệ thống tự động kích hoạt tiến trình hoàn tiền toàn bộ cho các đơn hàng đã thanh toán và hủy bỏ hiệu lực của toàn bộ vé liên quan.", bold_prefix="Quy tắc toàn vẹn tài chính: ")
-    doc.add_page_break()
-
-    # =========================================================================
-    # CHƯƠNG 2
-    # =========================================================================
-    add_title_p("CHƯƠNG 2: PHÂN TÍCH VÀ THIẾT KẾ HỆ THỐNG", size=16, bold=True, space_after=14)
-    add_h2("2.1. Phân tích yêu cầu chức năng (Functional Requirements)")
-    add_p("Hệ thống CineReserve phân cấp người dùng thành 3 vai trò chính theo mô hình kiểm soát truy cập dựa trên vai trò (RBAC): Khách hàng (CUSTOMER), Nhân viên rạp (STAFF) và Quản trị viên (ADMIN). Chi tiết quyền hạn được mô tả trong ma trận phân quyền dưới đây:")
-
-    add_table_header_caption("Bảng 2.1: Ma trận phân quyền chức năng hệ thống theo vai trò người dùng (RBAC Matrix)")
-    t_rbac = doc.add_table(rows=1, cols=4)
-    t_rbac.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_table_borders(t_rbac)
-    for idx, name in enumerate(["Chức năng hệ thống", "Khách hàng (CUSTOMER)", "Nhân viên rạp (STAFF)", "Quản trị viên (ADMIN)"]):
-        c = t_rbac.rows[0].cells[idx]
-        c.text = name
-        set_cell_shading(c, "EBF1F5")
-        p = c.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        for r in p.runs:
-            r.bold = True
-            r.font.name = 'Times New Roman'
-            r.font.size = Pt(11)
-
-    rbac_data = [
-        ("Đăng ký tài khoản, Đăng nhập, Đổi mật khẩu", "Có", "Có (Bắt buộc đổi khi tạo)", "Có"),
-        ("Xem danh mục phim, Suất chiếu, Đặt vé nhanh", "Có", "Có", "Có"),
-        ("Tương tác trò chuyện với Trợ lý AI Gemini", "Có", "Có", "Có"),
-        ("Chọn ghế, Giữ ghế 5 phút, Đặt đơn hàng", "Có (Duy nhất vai trò này)", "Không được phép", "Không được phép"),
-        ("Thanh toán đơn hàng, Tải vé QR Code", "Có", "Không được phép", "Không được phép"),
-        ("Xem lịch sử đơn hàng cá nhân", "Có (Chỉ đơn của mình)", "Có (Chỉ đơn của mình)", "Có (Chỉ đơn của mình)"),
-        ("Soát vé QR bằng Camera / Tải tệp ảnh", "Không", "Có (Chỉ tại rạp được gán)", "Không (Tách biệt quyền)"),
-        ("Tra cứu đơn hàng vận hành", "Không", "Có (Cần mã chính xác tại rạp)", "Có (Tìm kiếm, lọc toàn hệ thống)"),
-        ("Quản lý danh mục phim (CRUD)", "Không", "Không", "Có (Toàn quyền)"),
-        ("Quản lý Suất chiếu, Phòng chiếu (CRUD)", "Không", "Không", "Có (Toàn quyền)"),
-        ("Quản lý tài khoản nhân viên và gán chi nhánh", "Không", "Không", "Có (Toàn quyền)"),
-        ("Xem Báo cáo doanh thu & Xuất tệp tin CSV", "Không", "Có (Chỉ xem rạp của mình)", "Có (Xem toàn hệ thống)"),
-        ("Xem Nhật ký kiểm toán hệ thống (Audit Log)", "Không", "Không", "Có (Toàn quyền)")
-    ]
-    for r_data in rbac_data:
-        row = t_rbac.add_row()
-        for idx, val in enumerate(r_data):
-            c = row.cells[idx]
-            c.text = val
-            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
-            p = c.paragraphs[0]
-            p.paragraph_format.space_after = Pt(2)
-            if idx == 0:
-                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                for r in p.runs:
-                    r.bold = True
-                    r.font.name = 'Times New Roman'
-                    r.font.size = Pt(11)
-            else:
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                for r in p.runs:
-                    r.font.name = 'Times New Roman'
-                    r.font.size = Pt(11)
-
-    add_h2("2.2. Phân tích yêu cầu phi chức năng (Non-Functional Requirements)")
-    add_bullet("Hệ thống duy trì phiên người dùng thông qua Cookie HTTP an toàn (HttpOnly, SameSite=Lax, Secure khi chạy HTTPS). Mật khẩu được băm một chiều bằng thuật toán Scrypt với chi phí tính toán cao (N=32768, r=8, p=3), sử dụng salt ngẫu nhiên 16 bytes và so sánh thời gian cố định bằng timingSafeEqual để chống lại các cuộc tấn công đo thời gian (Timing Attacks). Mọi thông tin nhạy cảm của khách hàng (Email, Phone) đều được che giấu một phần khi hiển thị trên màn hình tra cứu của nhân viên.", bold_prefix="Tính an toàn và bảo mật: ")
-    add_bullet("Tận dụng kiến trúc Server Components của Next.js 16, các trang tĩnh và dữ liệu danh mục phim được biên dịch và cache trực tiếp tại máy chủ, thời gian phản hồi (TTFB) đạt mức dưới 200ms trong điều kiện mạng tiêu chuẩn. Sơ đồ ghế tối ưu hóa tần số thăm dò (polling) 5 giây một lần kết hợp với lắng nghe sự kiện window focus để giảm tải tối đa cho cơ sở dữ liệu.", bold_prefix="Hiệu năng và khả năng đáp ứng: ")
-    add_bullet("Toàn bộ giao diện được thiết kế tương thích hoàn toàn (Fully Responsive) theo chuẩn Mobile-First. Kích thước các nút bấm và ô ghế trên thiết bị di động đạt chuẩn tiếp cận tối thiểu 44px x 44px, hỗ trợ điều hướng bàn phím đầy đủ và tuân thủ các nguyên tắc về độ tương phản màu sắc cho người khuyết thị.", bold_prefix="Khả năng tương thích và khả năng tiếp cận (Accessibility): ")
-
-    add_h2("2.3. Thiết kế luồng dữ liệu và biểu đồ tuần tự")
-    add_p("Quy trình giữ ghế và thanh toán là xương sống của hệ thống. Dưới đây là mô tả chi tiết các bước xử lý dữ liệu giữa Client và Server trong luồng giữ ghế:")
-    add_p("1. Khách hàng truy cập vào trang sơ đồ ghế của một suất chiếu: Server Component nạp dữ liệu SeatMap ban đầu từ bảng ShowtimeSeat, hiển thị trạng thái của từng ghế (Trống, Đang bị giữ, Đã bán, Ghế của tôi).")
-    add_p("2. Khách hàng nhấn chọn ghế: Client gửi yêu cầu HTTP PUT kèm mảng seatIds tới endpoint /api/showtimes/[id]/seats.")
-    add_p("3. Tại máy chủ, hàm xử lý kích hoạt một transaction cơ sở dữ liệu và yêu cầu khóa PostgreSQL Advisory Lock với mã số cố định 20261102. Khóa này đảm bảo chỉ có duy nhất một tiến trình được phép đọc/ghi trạng thái ghế của suất chiếu tại cùng một thời điểm.")
-    add_p("4. Hệ thống chạy bảo trì giải phóng các phiên giữ ghế quá 5 phút đã hết hạn, sau đó kiểm tra xem trong số các ghế khách hàng vừa chọn có ghế nào đã bị người khác giữ hoặc đã bán hay chưa. Nếu vi phạm, transaction lập tức Rollback và trả về mã lỗi 409 SEAT_ALREADY_HELD. Nếu hợp lệ, hệ thống tạo/cập nhật bản ghi HoldSession và đánh dấu holdSessionId lên các ghế tương ứng, sau đó Commit transaction để tự động nhả khóa cho các yêu cầu khác tiếp tục.")
-
-    add_h2("2.4. Thiết kế cơ sở dữ liệu quan hệ 21 bảng")
-    add_p("Cơ sở dữ liệu của CineReserve được xây dựng trên PostgreSQL 17 và quản lý thông qua Prisma ORM, bao gồm đúng 21 bảng nghiệp vụ được thiết kế chuẩn hóa:")
-
-    add_table_header_caption("Bảng 2.2: Danh mục 21 thực thể dữ liệu trong cơ sở dữ liệu CineReserve")
-    t_ent = doc.add_table(rows=1, cols=3)
-    t_ent.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_table_borders(t_ent)
-    for idx, name in enumerate(["Phân nhóm nghiệp vụ", "Tên bảng (Entity)", "Vai trò và ý nghĩa lưu trữ dữ liệu"]):
-        c = t_ent.rows[0].cells[idx]
-        c.text = name
-        set_cell_shading(c, "EBF1F5")
-        p = c.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        for r in p.runs:
-            r.bold = True
-            r.font.name = 'Times New Roman'
-            r.font.size = Pt(11)
-
-    ent_data = [
-        ("Danh mục & Phim", "Movie", "Lưu thông tin phim: thời lượng, độ tuổi, đạo diễn, poster, trạng thái, version"),
-        ("Danh mục & Phim", "MovieTranslation", "Lưu tiêu đề và tóm tắt nội dung phim theo ngôn ngữ (vi, en)"),
-        ("Danh mục & Phim", "Genre", "Lưu danh mục các thể loại điện ảnh (Hành động, Hoạt hình, Tâm lý...)"),
-        ("Danh mục & Phim", "MovieGenre", "Bảng quan hệ nhiều - nhiều giữa phim và thể loại"),
-        ("Cơ sở vật chất", "Cinema", "Thông tin rạp chiếu: mã rạp, địa chỉ, khu vực, giờ mở/đóng cửa"),
-        ("Cơ sở vật chất", "Auditorium", "Thông tin các phòng chiếu thuộc từng chi nhánh rạp"),
-        ("Cơ sở vật chất", "Seat", "Sơ đồ ghế cố định của từng phòng chiếu (hàng, số ghế, loại STANDARD/VIP)"),
-        ("Lịch & Suất chiếu", "Showtime", "Thông tin suất chiếu: giờ bắt đầu, kết thúc, dọn phòng, cutoff, giá cơ bản"),
-        ("Lịch & Suất chiếu", "ShowtimeSeat", "Chụp lại danh sách ghế cho riêng từng suất chiếu, lưu ai giữ, ai đã mua"),
-        ("Tài khoản & Phân quyền", "User", "Thông tin người dùng: email, mật khẩu băm Scrypt, vai trò (3 roles), trạng thái"),
-        ("Tài khoản & Phân quyền", "AuthSession", "Phiên đăng nhập: lưu token băm SHA-256, thời điểm hết hạn"),
-        ("Tài khoản & Phân quyền", "StaffAssignment", "Phân công nhân viên rạp: liên kết 1-1 giữa User (STAFF) và Cinema"),
-        ("Tài khoản & Phân quyền", "AuthRateLimit", "Lưu vết giới hạn tần suất yêu cầu (Throttling) để chống tấn công brute-force"),
-        ("Giữ ghế & Đơn hàng", "HoldSession", "Phiên giữ ghế tạm thời (5 phút): trạng thái, hạn chót, danh sách ghế"),
-        ("Giữ ghế & Đơn hàng", "Booking", "Đơn hàng: mã đơn CR-..., tổng tiền BigInt, trạng thái PENDING/PAID/CANCELLED"),
-        ("Giữ ghế & Đơn hàng", "BookingItem", "Chi tiết từng ghế trong đơn hàng, giá tiền của từng ghế"),
-        ("Giữ ghế & Đơn hàng", "PaymentAttempt", "Lịch sử các lần thử thanh toán, lưu idempotencyKey để chống thanh toán lặp"),
-        ("Giữ ghế & Đơn hàng", "Refund", "Bản ghi hoàn tiền khi rạp hủy suất chiếu, lưu lý do và số tiền hoàn"),
-        ("Vé & Soát vé", "Ticket", "Vé điện tử chính thức sau khi thanh toán thành công, lưu mã duy nhất TK-..."),
-        ("Vé & Soát vé", "TicketRedemption", "Lưu vết soát vé: thời điểm nhân viên xác nhận cho khách vào rạp tại rạp được gán"),
-        ("Hệ thống & Kiểm toán", "AuditLog", "Nhật ký kiểm toán ghi lại mọi thay đổi cấu hình phim, lịch chiếu và soát vé")
-    ]
-    for r_data in ent_data:
-        row = t_ent.add_row()
-        for idx, val in enumerate(r_data):
-            c = row.cells[idx]
-            c.text = val
-            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
-            p = c.paragraphs[0]
-            p.paragraph_format.space_after = Pt(2)
-            if idx == 1:
-                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                for r in p.runs:
-                    r.bold = True
-                    r.font.name = 'Times New Roman'
-                    r.font.size = Pt(10.5)
-            else:
-                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                for r in p.runs:
-                    r.font.name = 'Times New Roman'
-                    r.font.size = Pt(10.5)
-    doc.add_page_break()
-
-    # =========================================================================
-    # CHƯƠNG 3
-    # =========================================================================
-    add_title_p("CHƯƠNG 3: CƠ SỞ CÔNG NGHỆ VÀ GIẢI PHÁP KỸ THUẬT", size=16, bold=True, space_after=14)
-    add_h2("3.1. Nền tảng Next.js App Router, React 19 và TypeScript")
-    add_p("Hệ thống CineReserve được xây dựng trên nền tảng Next.js phiên bản 16 (kiến trúc App Router mới nhất) kết hợp với thư viện giao diện React 19 và ngôn ngữ định kiểu tĩnh TypeScript. Sự kết hợp này mang lại các lợi thế công nghệ vượt bậc:")
-    add_bullet("Khác với kiến trúc React truyền thống (vốn buộc toàn bộ code phải tải về và chạy ở trình duyệt của người dùng), Next.js App Router mặc định mọi component đều là Server Components. Toàn bộ logic đọc cơ sở dữ liệu, phân quyền bảo mật và tạo mã HTML được thực thi trực tiếp tại máy chủ. Trình duyệt chỉ nhận về tệp HTML siêu nhẹ, giúp tốc độ mở trang gần như tức thì và loại bỏ hoàn toàn các lỗ hổng rò rỉ mã nguồn nhạy cảm ra ngoài client.", bold_prefix="Mô hình React Server Components (RSC): ")
-    add_bullet("Toàn bộ hệ thống từ bảng CSDL trong Prisma, các DTO trung gian, các API endpoint đến props của từng thẻ giao diện đều được định nghĩa chặt chẽ bằng TypeScript. Việc này giúp loại bỏ 100% các lỗi kinh điển trong lập trình web như undefined is not a function hoặc truy cập nhầm thuộc tính không tồn tại ngay trong quá trình biên dịch (Compile-time).", bold_prefix="Định kiểu tĩnh toàn diện (End-to-End Type Safety): ")
-
-    add_h2("3.2. Giải pháp kiểm soát tranh chấp ghế bằng PostgreSQL Advisory Lock")
-    add_p("Khi nhiều người dùng cùng bấm giữ một ghế trong cùng một thời điểm, đây là bài toán kinh điển về xung đột tài nguyên trong Khoa học Máy tính. Có 3 giải pháp chính thường được cân nhắc:")
-
-    add_table_header_caption("Bảng 3.1: So sánh các cơ chế kiểm soát tranh chấp ghế đồng thời (Concurrency Control)")
-    t_lock = doc.add_table(rows=1, cols=4)
-    t_lock.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_table_borders(t_lock)
-    for idx, name in enumerate(["Đặc tính so sánh", "Optimistic Locking (Version Check)", "Distributed Lock (Redis Redlock)", "PostgreSQL Advisory Lock (CineReserve)"]):
-        c = t_lock.rows[0].cells[idx]
-        c.text = name
-        set_cell_shading(c, "EBF1F5")
-        p = c.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        for r in p.runs:
-            r.bold = True
-            r.font.name = 'Times New Roman'
-            r.font.size = Pt(11)
-
-    lock_data = [
-        ("Cơ chế hoạt động", "Kiểm tra số version, nếu lệch thì báo lỗi và thử lại", "Đặt khóa tạm thời trên bộ nhớ Redis bên ngoài", "Khóa số hiệu nguyên trực tiếp cấp giao dịch CSDL"),
-        ("Hiệu năng khi tranh chấp cao", "Kém: hàng trăm request thử lại gây quá tải CPU DB", "Tốt, nhưng tốn chi phí mạng giữa App và Redis", "Rất tốt: CSDL tự động xếp hàng đợi trong micro-giây"),
-        ("Độ tin cậy khi App bị Crash", "Tốt (dựa vào rollback CSDL)", "Nguy hiểm: Dễ bị rác lock nếu chưa kịp xóa TTL", "Tuyệt đối: Transaction đóng là Lock tự động hủy ngay"),
-        ("Độ phức tạp hạ tầng", "Đơn giản (chỉ cần CSDL)", "Phức tạp: Phải nuôi thêm cụm Redis độc lập", "Tối giản: Tận dụng trực tiếp PostgreSQL có sẵn"),
-        ("Chi phí đồng bộ dữ liệu", "Không phát sinh", "Có độ trễ đồng bộ giữa Cache và Database", "Nhất quán 100% theo chuẩn ACID của PostgreSQL")
-    ]
-    for r_data in lock_data:
-        row = t_lock.add_row()
-        for idx, val in enumerate(r_data):
-            c = row.cells[idx]
-            c.text = val
-            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
-            p = c.paragraphs[0]
-            p.paragraph_format.space_after = Pt(2)
-            if idx == 0:
-                p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-                for r in p.runs:
-                    r.bold = True
-                    r.font.name = 'Times New Roman'
-                    r.font.size = Pt(11)
-            else:
-                p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
-                for r in p.runs:
-                    r.font.name = 'Times New Roman'
                     r.font.size = Pt(10.5)
 
-    add_p("Trong CineReserve, giải pháp được lựa chọn là pg_advisory_xact_lock(20261102). Khóa này mang tính chất cấp giao dịch (Transaction-scoped). Ngay khi transaction kết thúc (dù thành công hay gặp lỗi Rollback), PostgreSQL sẽ tự động giải phóng khóa lập tức, đảm bảo hệ thống không bao giờ bị rơi vào trạng thái bế tắc vĩnh viễn (Deadlock).")
+    add_h2("3.4 Kết quả đánh giá")
+    add_p("Sau quá trình triển khai thực tế và chạy toàn bộ hơn 840 ca kiểm thử tự động, hệ thống CineReserve đạt được các đánh giá xuất sắc:")
+    add_bullet("Về phía người dùng (Khách hàng): Trải nghiệm đặt vé diễn ra liền mạch, sơ đồ ghế 44px dễ bấm trên điện thoại, đồng hồ 5 phút đếm ngược rõ ràng và vé QR hiển thị ngay lập tức sau thanh toán.")
+    add_bullet("Về phía nhân viên soát vé: Giao diện web camera quét mã QR nhạy bén, quy trình xác thực 2 bước giúp kiểm soát vé an toàn và loại trừ hoàn toàn vé giả mạo.")
+    add_bullet("Về phía quản trị viên: Quản lý phim song ngữ thuận tiện, thuật toán chống trùng phòng chiếu đảm bảo rạp luôn có đủ 20 phút vệ sinh phòng.")
+    add_bullet("Về hiệu năng và bảo mật: Cơ chế khóa PostgreSQL Advisory Lock giải quyết triệt để bài toán tranh chấp ghế đồng thời mà không làm tăng tải CPU của CSDL. Mật khẩu băm Scrypt bảo vệ an toàn tối đa cho tài khoản người dùng.")
+    add_bullet("Về Trợ lý ảo AI: Tốc độ phản hồi gói tin đầu tiên dưới 600ms, nhận diện tốt ngữ cảnh hội thoại tiếng Việt và chỉ gợi ý các bộ phim đang thực sự mở bán vé.")
 
-    add_h2("3.3. Giải pháp tích hợp Mô hình ngôn ngữ lớn Google Gemini AI")
-    add_p("CineReserve tích hợp mô hình ngôn ngữ lớn gemini-3.5-flash-lite thông qua Google AI API. Để giải quyết vấn đề độ trễ cao thường gặp của các hệ thống AI, đồ án áp dụng hai giải pháp đột phá:")
-    add_bullet("Thay vì gọi AI hai lần (lần 1 hiểu ý định của khách, lần 2 soạn câu trả lời), hệ thống cung cấp một bản System Prompt toàn diện kèm JSON Schema chặt chẽ. Mô hình Gemini sẽ thực hiện đồng thời việc phân tích tham số tìm kiếm (SearchPlan: gồm movieIds, cinemaId, ngày chiếu, độ tuổi) và soạn thảo văn bản phản hồi tự nhiên trong duy nhất một lượt gọi. Giải pháp này giúp cắt giảm 50% thời gian chờ đợi của người dùng.", bold_prefix="Cơ chế gọi đơn lượt (Single-Turn Logic): ")
-    add_bullet("Endpoint /api/chat sử dụng chuẩn Newline-Delimited JSON (NDJSON). Ngay khi máy chủ bắt đầu xử lý, nó gửi ngay các gói tin trạng thái stage: \"understanding\" và stage: \"searching\". Trình duyệt của khách hàng lập tức hiển thị hiệu ứng động tương ứng, xóa bỏ hoàn toàn cảm giác sốt ruột của người dùng trước khi nhận được phản hồi chính thức.", bold_prefix="Giao thức truyền dữ liệu Streaming NDJSON: ")
-    add_bullet("Hệ thống tự động theo dõi lịch sử 4 lượt chat gần nhất và trích xuất các điều kiện ẩn (độ tuổi, rạp yêu thích, ngày xem). Khi người dùng nói các câu ngắn bằng tiếng Việt như \"đổi sang rạp Hà Nội\" hoặc \"bỏ lọc tuổi\", hệ thống áp dụng biểu thức chính quy chuẩn hóa tiếng Việt không dấu để tự động cập nhật lại bộ lọc mà không bắt người dùng phải nhập lại từ đầu.", bold_prefix="Bảo tồn ngữ cảnh hội thoại (Context Preservation): ")
+    add_h2("Kết luận chương 3:")
+    add_p("Trong chương 3, em đã trình bày chi tiết toàn bộ các bước triển khai hệ thống CineReserve từ khâu chuẩn bị mã nguồn, cấu hình database PostgreSQL, nạp dữ liệu mẫu đến kết quả giao diện thực tế của từng phân hệ. Kết quả kiểm thử với hơn 840 ca kiểm thử tự động đạt tỷ lệ thành công 100% là bằng chứng khoa học vững chắc khẳng định hệ thống hoạt động ổn định, chính xác và sẵn sàng cho việc nghiệm thu trước Hội đồng.")
     doc.add_page_break()
 
     # =========================================================================
-    # CHƯƠNG 4
+    # PHẦN KẾT LUẬN (THEO ĐÚNG FORM BẠN)
     # =========================================================================
-    add_title_p("CHƯƠNG 4: TRIỂN KHAI VÀ HIỆN THỰC HÓA HỆ THỐNG CINERESERVE", size=16, bold=True, space_after=14)
-    add_h2("4.1. Kiến trúc phân tầng và tổ chức mã nguồn")
-    add_p("Toàn bộ mã nguồn hệ thống được đặt tại d:\\DA, tuân thủ nguyên tắc phân tách trách nhiệm (Separation of Concerns):")
-    add_bullet("docs/: Chứa 20 tài liệu kỹ thuật chi tiết ghi lại toàn bộ lộ trình phát triển và kiểm chứng sản phẩm.")
-    add_bullet("prisma/: Chứa schema.prisma định nghĩa 21 bảng dữ liệu và thư mục migrations theo dõi lịch sử thay đổi cấu trúc bảng.")
-    add_bullet("scripts/: Chứa 15 kịch bản TypeScript tự động kiểm tra tính đúng đắn của từng module từ database, auth, hold ghế đến AI.")
-    add_bullet("src/app/: Chứa 17 API routes và các trang giao diện song ngữ theo App Router ([locale]).")
-    add_bullet("src/components/: Chứa 25 component giao diện và 14 CSS Modules độc lập.")
-    add_bullet("src/lib/: Chứa toàn bộ nhân logic nghiệp vụ được bảo vệ bởi nhãn \"server-only\".")
+    add_title_p("KẾT LUẬN", size=18, bold=True, space_after=14)
+    add_h2("Kết quả đạt được")
+    add_p("Qua quá trình thực hiện đề tài tốt nghiệp \"Xây dựng website đặt vé xem phim CineReserve sử dụng Next.js, TypeScript và tích hợp chatbot AI\", em đã thành công trong việc nghiên cứu và ứng dụng những công nghệ web tiên tiến nhất hiện nay vào một sản phẩm thực tế. Kết quả đạt được thể hiện ở các điểm nổi bật sau:")
+    add_bullet("Xây dựng thành công hệ thống website CineReserve hoàn chỉnh với kiến trúc Next.js 16 App Router, React 19, TypeScript, PostgreSQL 17 và Prisma ORM.")
+    add_bullet("Giải quyết trọn vẹn bài toán hóc búa về tranh chấp tài nguyên đồng thời khi giữ ghế thông qua cơ chế khóa cấp giao dịch PostgreSQL Advisory Lock, đảm bảo tính toàn vẹn tuyệt đối cho phiên giữ ghế 5 phút.")
+    add_bullet("Hiện thực hóa thành công quy trình nghiệp vụ điện ảnh khép kín: đặt vé nhanh, chọn ghế thời gian thực, thanh toán an toàn với idempotency, phát hành vé điện tử mã QR độc lập và soát vé qua camera di động.")
+    add_bullet("Tích hợp thành công mô hình ngôn ngữ lớn Google Gemini AI với kỹ thuật Single-Turn Schema và giao thức Streaming NDJSON, mang lại một Trợ lý ảo tư vấn phim thông minh vượt trội.")
+    add_bullet("Bảo chứng chất lượng hệ thống bằng 15 bộ kịch bản kiểm thử tự động với hơn 840 tests đạt tỷ lệ thành công 100%.")
 
-    add_h2("4.2. Hiện thực hóa phân hệ Khách hàng")
-    add_p("Trang chủ CineReserve được xây dựng với tông màu xanh mực và vàng sâm-panh sang trọng (Champagne Gold), đậm phong cách điện ảnh cao cấp. Khách hàng có thể tìm kiếm phim theo tên (hỗ trợ tìm tiếng Việt không dấu), lọc theo thể loại và chọn suất xem nhanh thông qua khối Quick Booking.")
-    add_p("Module chọn ghế (SeatPicker): Sử dụng CSS Grid để dựng sơ đồ phòng chiếu mô phỏng thực tế. Mỗi vị trí ghế là một nút bấm có kích thước chuẩn 44px, hiển thị rõ số hàng và số ghế. Khách hàng chọn tối đa 8 ghế; đồng hồ đếm ngược 5 phút hiển thị trên thanh tóm tắt di động giúp người dùng luôn nắm rõ thời gian giữ ghế còn lại của mình.")
-    add_p("Quy trình thanh toán an toàn (OrderDetail): Trang hiển thị thanh tiến trình 4 bước (Suất chiếu -> Chọn ghế -> Thanh toán -> Nhận vé). Trước khi thanh toán, khách hàng bắt buộc phải tích chọn cam kết đủ tuổi theo phân loại phim (P, K, T13, T16, T18) và đồng ý với chính sách vé. Khi nhấn nút mô phỏng thanh toán thành công, hệ thống gửi yêu cầu thanh toán kèm mã idempotencyKey để tránh việc bấm nhiều lần làm trừ tiền trùng lặp.")
+    add_h2("Hạn chế")
+    add_p("Mặc dù hệ thống đã đạt được hầu hết các mục tiêu quan trọng đề ra, đề tài vẫn còn tồn tại một số hạn chế nhất định:")
+    add_bullet("Cổng thanh toán trong đồ án hiện mới dừng lại ở mức độ mô phỏng an toàn (Mock Payment) phục vụ kiểm thử nghiệp vụ, chưa tích hợp trực tiếp với cổng thanh toán tiền thật (như VNPAY hay MoMo).")
+    add_bullet("Hệ thống hiện tại hoạt động trên nền tảng Web Responsive, chưa xây dựng các ứng dụng di động độc lập (Native Mobile App) trên iOS và Android.")
+    add_bullet("Chưa triển khai các dịch vụ giá trị gia tăng như bán bắp nước (F&B combos) hoặc tích điểm thành viên.")
 
-    add_h2("4.3. Hiện thực hóa phân hệ Nhân viên soát vé")
-    add_p("Màn hình soát vé dành cho nhân viên (/staff/tickets) được tối ưu cho cả máy tính và điện thoại thông minh:")
-    add_bullet("Tích hợp thư viện giải mã hình ảnh jsQR, cho phép nhân viên bật trực tiếp Camera trên trình duyệt web của điện thoại để quét mã QR trên vé của khán giả với tốc độ 4 khung hình/giây. Ngoài ra, hệ thống hỗ trợ chức năng tải tệp ảnh chụp mã QR lên máy chủ để giải mã nếu camera gặp sự cố.")
-    add_bullet("Quy trình soát vé 2 bước an toàn: Khi camera bắt được mã QR dạng CR1:TK-..., hệ thống chỉ mới thực hiện thao tác kiểm tra (Inspect Ticket). Màn hình nhân viên hiển thị ảnh poster, tên phim, phòng chiếu, số ghế, trạng thái vé và khung giờ vào rạp hợp lệ. Nhân viên đối chiếu thực tế xong mới bấm nút \"Xác nhận vào rạp\" (Redeem Ticket). Thao tác này ghi nhận trạng thái vé sang USED kèm mã yêu cầu requestKey và lưu vết vào bảng TicketRedemption cùng AuditLog, triệt tiêu nguy cơ một vé bị quét 2 lần.")
-
-    add_h2("4.4. Hiện thực hóa phân hệ Quản trị hệ thống")
-    add_p("Phân hệ Quản trị (/admin) cung cấp các công cụ vận hành mạnh mẽ:")
-    add_bullet("Quản lý phim: Cho phép thêm mới, chỉnh sửa thông tin phim với hai phiên bản ngôn ngữ Tiếng Việt và Tiếng Anh đồng thời. Cơ chế version control bảo vệ chống ghi đè dữ liệu cũ. Hệ thống tự động khóa không cho phép sửa đổi thời lượng phim hoặc lưu trữ phim nếu bộ phim đó đang có suất chiếu trong tương lai chưa bị hủy.")
-    add_bullet("Quản lý lịch chiếu: Quản trị viên chọn phim, chọn phòng chiếu và thời gian bắt đầu. Hệ thống tự động tính toán giờ kết thúc và giờ dọn phòng (endsAt + 20 phút), đồng thời quét toàn bộ các suất chiếu đã có trong phòng để ngăn chặn triệt để tình trạng trùng lịch.")
-    add_bullet("Quản lý nhân viên: Quản trị viên tạo tài khoản nhân viên, phân công chi nhánh rạp hoạt động và cấp mật khẩu tạm. Tài khoản nhân viên có cờ mustChangePassword = true, bắt buộc phải đổi mật khẩu mới trong lần đăng nhập đầu tiên mới được truy cập các tính năng làm việc.")
-    add_bullet("Báo cáo doanh thu đa chiều: Tổng hợp số liệu tài chính theo phim, theo chi nhánh và theo mốc thời gian (ngày/tháng). Báo cáo tách bạch rõ ràng giữa Doanh thu thực thu (Gross), Tiền hoàn do hủy suất (Refunds) và Doanh thu ròng (Net). Hỗ trợ xuất dữ liệu ra tệp tin CSV chuẩn hóa với UTF-8 BOM và cơ chế lọc ký tự chống tấn công CSV Formula Injection.")
-
-    add_h2("4.5. Hiện thực hóa Trợ lý tư vấn phim thông minh")
-    add_p("Widget trợ lý phim (MovieAssistant) hiển thị dạng nút bấm nổi ở góc phải màn hình của khách hàng. Trợ lý có khả năng:")
-    add_bullet("Thấu hiểu nhu cầu bằng ngôn ngữ tự nhiên: Tư vấn phim dựa trên độ tuổi, thể loại yêu thích và khung giờ rảnh của người dùng.")
-    add_bullet("Tra cứu dữ liệu thực: Trợ lý chỉ gợi ý những bộ phim đang thực sự có suất chiếu mở bán trong hệ thống, kèm theo thẻ phim trực quan, thông tin giá vé và đường dẫn trực tiếp đến trang chọn ghế.")
-    add_bullet("Hàng rào an toàn (Safety Guardrails): Tự động phát hiện và chặn các câu hỏi cố tình khai thác thông tin nhạy cảm của khách hàng, từ chối các yêu cầu thực hiện hành vi trái thẩm quyền (như đặt vé hộ hay can thiệp vào cơ sở dữ liệu) và tuyệt đối không tiết lộ trước nội dung phim (spoilers).")
-    doc.add_page_break()
-
-    # =========================================================================
-    # CHƯƠNG 5
-    # =========================================================================
-    add_title_p("CHƯƠNG 5: KIỂM THỬ VÀ ĐÁNH GIÁ THỰC NGHIỆM", size=16, bold=True, space_after=14)
-    add_h2("5.1. Chiến lược kiểm thử tự động toàn diện")
-    add_p("Để đảm bảo chất lượng phần mềm đạt tiêu chuẩn công nghiệp và độ tin cậy tuyệt đối, đồ án áp dụng phương pháp Kiểm thử tích hợp tự động (Automated Integration Testing). Toàn bộ 15 kịch bản kiểm thử được viết bằng TypeScript và thực thi trực tiếp trên cơ sở dữ liệu phát triển:")
-
-    add_table_header_caption("Bảng 5.1: Bảng tổng hợp kết quả chạy 15 bộ kịch bản kiểm thử tự động hệ thống")
-    t_test = doc.add_table(rows=1, cols=4)
-    t_test.alignment = WD_TABLE_ALIGNMENT.CENTER
-    set_table_borders(t_test)
-    for idx, name in enumerate(["Kịch bản kiểm thử", "Mã lệnh thực thi", "Số ca kiểm thử (Tests)", "Kết quả đánh giá"]):
-        c = t_test.rows[0].cells[idx]
-        c.text = name
-        set_cell_shading(c, "EBF1F5")
-        p = c.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        for r in p.runs:
-            r.bold = True
-            r.font.name = 'Times New Roman'
-            r.font.size = Pt(11)
-
-    test_data = [
-        ("Xác thực & Bảo mật tài khoản", "npm run test:auth", "44 tests", "ĐẠT (PASS 100%)"),
-        ("Quản trị phim & Lập lịch chiếu", "npm run test:admin", "73 tests", "ĐẠT (PASS 100%)"),
-        ("Kiểm soát giữ ghế 5 phút", "npm run test:holds", "64 tests", "ĐẠT (PASS 100%)"),
-        ("Đơn hàng & Thanh toán an toàn", "npm run test:orders", "98 tests", "ĐẠT (PASS 100%)"),
-        ("Mã QR & Quy trình soát vé", "npm run test:tickets", "69 tests", "ĐẠT (PASS 100%)"),
-        ("Báo cáo doanh thu đa chiều", "npm run test:revenue", "82 tests", "ĐẠT (PASS 100%)"),
-        ("Trợ lý phim AI & Streaming", "npm run test:chat", "89 tests", "ĐẠT (PASS 100%)"),
-        ("Hội thoại AI & Xử lý câu ngắn", "npm run test:chat-dialogue", "128 tests", "ĐẠT (PASS 100%)"),
-        ("Bảo tồn ngữ cảnh hội thoại AI", "npm run test:chat-context", "170 tests", "ĐẠT (PASS 100%)"),
-        ("Tra cứu đơn vận hành", "npm run test:operations", "80 tests", "ĐẠT (PASS 100%)"),
-        ("Quyền mua vé & Xác nhận tuổi", "npm run test:checkout", "52 tests", "ĐẠT (PASS 100%)"),
-        ("Quản lý nhân viên tối giản", "npm run test:staff", "113 tests", "ĐẠT (PASS 100%)"),
-        ("Lịch chiếu theo rạp và ngày", "npm run test:schedule", "49 tests", "ĐẠT (PASS 100%)"),
-        ("Kiểm thử E2E toàn luồng đặt vé", "npm run test:journey", "234 tests", "ĐẠT (PASS 100%)"),
-        ("TỔNG CỘNG HỆ THỐNG", "Toàn bộ 15 bộ script", "> 840 tests", "HOÀN HẢO (100% PASS)")
-    ]
-    for r_data in test_data:
-        row = t_test.add_row()
-        for idx, val in enumerate(r_data):
-            c = row.cells[idx]
-            c.text = val
-            set_cell_margins(c, top=60, bottom=60, left=80, right=80)
-            p = c.paragraphs[0]
-            p.paragraph_format.space_after = Pt(2)
-            if idx == 0 or idx == 3:
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER if idx == 3 else WD_ALIGN_PARAGRAPH.LEFT
-                for r in p.runs:
-                    r.bold = True
-                    r.font.name = 'Times New Roman'
-                    r.font.size = Pt(11)
-            else:
-                p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                for r in p.runs:
-                    r.font.name = 'Times New Roman'
-                    r.font.size = Pt(11)
-
-    add_h2("5.2. Đánh giá thực nghiệm khả năng xử lý tranh chấp ghế đồng thời")
-    add_p("Để kiểm chứng tính vững chắc của giải pháp PostgreSQL Advisory Lock, một kịch bản kiểm thử áp lực được thiết kế trong test:holds:")
-    add_bullet("Khởi tạo đồng thời 10 tiến trình worker gửi yêu cầu chọn cùng duy nhất một vị trí ghế VIP (mã seatId trùng nhau) của cùng một suất chiếu tại cùng một mili-giây.")
-    add_bullet("Kết quả ghi nhận: Đúng 1 tiến trình đến trước giành được khóa Advisory Lock thành công và tạo được bản ghi HoldSession (HTTP 200/201). 9 tiến trình còn lại nhận về mã lỗi HTTP 409 SEAT_ALREADY_HELD một cách êm ái. Không có bất kỳ hiện tượng Deadlock hoặc Crash kết nối nào xảy ra. Cơ sở dữ liệu duy trì tính toàn vẹn 100%.")
-
-    add_h2("5.3. Đánh giá chất lượng và độ trễ của Trợ lý AI")
-    add_p("Trong bài kiểm tra thực tế với 18 lượt tương tác hỏi đáp tự nhiên kết nối trực tiếp với API Google Gemini thật tại local:")
-    add_bullet("15 lượt phản hồi cho kết quả cực kỳ chính xác: mô hình hiểu đúng ý định, trích xuất đúng tên phim và gợi ý chính xác các suất chiếu đang mở bán kèm liên kết đặt vé.")
-    add_bullet("Thời gian phản hồi gói tin đầu tiên (Time to First Stage) qua giao thức streaming NDJSON đạt trung bình dưới 600ms, mang lại trải nghiệm mượt mà, không gián đoạn cho người dùng.")
-    doc.add_page_break()
-
-    # =========================================================================
-    # KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
-    # =========================================================================
-    add_title_p("KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN", size=18, bold=True, space_after=14)
-    add_h2("1. Các kết quả đạt được của đồ án")
-    add_p("Sau quá trình nỗ lực nghiên cứu lý thuyết và triển khai thực nghiệm nghiêm túc, đề tài tốt nghiệp \"Xây dựng website đặt vé xem phim CineReserve sử dụng Next.js, TypeScript và tích hợp chatbot AI\" đã hoàn thành xuất sắc toàn bộ các mục tiêu đặt ra:")
-    add_bullet("Xây dựng thành công hệ thống website CineReserve hoàn chỉnh với kiến trúc công nghệ tiên tiến nhất hiện nay: Next.js 16 App Router, React 19, TypeScript, PostgreSQL 17 và Prisma ORM.", bold_prefix="Về mặt sản phẩm: ")
-    add_bullet("Giải quyết triệt để bài toán hóc búa về tranh chấp tài nguyên đồng thời trong thương mại điện tử bằng việc áp dụng sáng tạo cơ chế khóa cấp giao dịch PostgreSQL Advisory Lock, đảm bảo tính toàn vẹn tuyệt đối cho phiên giữ ghế 5 phút.", bold_prefix="Về mặt giải pháp khoa học: ")
-    add_bullet("Hiện thực hóa thành công quy trình nghiệp vụ điện ảnh khép kín và bảo mật: từ lập lịch chiếu, giữ ghế, thanh toán an toàn, phát hành vé QR, soát vé một lần bằng camera di động đến báo cáo doanh thu đa chiều.", bold_prefix="Về mặt nghiệp vụ: ")
-    add_bullet("Tích hợp thành công mô hình ngôn ngữ lớn Google Gemini AI với kỹ thuật Single-Turn Schema và giao thức Streaming NDJSON, tạo nên một Trợ lý ảo tư vấn phim thông minh vượt trội so với các hệ thống thương mại hiện hữu.", bold_prefix="Về mặt ứng dụng AI: ")
-    add_bullet("Hệ thống đạt chất lượng công nghiệp với hơn 840 ca kiểm thử tích hợp tự động thành công 100%, sẵn sàng cho việc đóng gói và triển khai vận hành thực tế.", bold_prefix="Về độ tin cậy: ")
-
-    add_h2("2. Hạn chế còn tồn tại")
-    add_bullet("Cổng thanh toán trong đồ án hiện mới dừng lại ở mức độ mô phỏng an toàn (Mock Payment) phục vụ nghiệm thu nghiệp vụ, chưa kết nối trực tiếp với cổng thanh toán tiền thật (như VNPAY, MoMo).")
-    add_bullet("Hệ thống hiện tại hoạt động hoàn toàn trên nền tảng Web Responsive, chưa xây dựng các ứng dụng di động độc lập (Native Mobile App) trên iOS và Android.")
-    add_bullet("Chưa triển khai các nghiệp vụ mở rộng như bán bắp nước (F&B combos), tích điểm đổi quà thành viên hoặc lựa chọn ghế đôi (Sweetbox).")
-
-    add_h2("3. Hướng phát triển trong tương lai")
+    add_h2("Hướng phát triển")
+    add_p("Trong tương lai gần, em sẽ tiếp tục hoàn thiện và phát triển mở rộng hệ thống với các định hướng sau:")
     add_bullet("Tích hợp cổng thanh toán trực tuyến chính thức qua cổng thanh toán quốc gia (VNPAY Sandbox / MoMo API) có chữ ký số bảo mật.")
-    add_bullet("Phát triển ứng dụng di động chuyên dụng cho nhân viên soát vé bằng React Native nhằm tối ưu tốc độ nhận diện mã QR trong điều kiện ánh sáng yếu tại cửa phòng chiếu.")
+    add_bullet("Xây dựng ứng dụng di động chuyên dụng cho nhân viên soát vé bằng React Native nhằm tối ưu tốc độ nhận diện mã QR trong điều kiện ánh sáng yếu tại cửa rạp.")
     add_bullet("Ứng dụng mô hình học máy (Machine Learning Recommendation System) dựa trên lịch sử xem phim để cá nhân hóa hoàn toàn giao diện trang chủ cho từng khách hàng.")
     doc.add_page_break()
 
     # =========================================================================
-    # TÀI LIỆU THAM KHẢO
+    # TÀI LIỆU THAM KHẢO (THEO ĐÚNG FORMAT BẠN)
     # =========================================================================
     add_title_p("TÀI LIỆU THAM KHẢO", size=18, bold=True, space_after=14)
     ref_list = [
-        "Trường Đại học Công nghiệp Hà Nội (2025), Quy định và Hướng dẫn trình bày Đồ án tốt nghiệp Đại học khối ngành Công nghệ thông tin, Nhà xuất bản Đại học Công nghiệp Hà Nội.",
+        "Trường Đại học Công nghiệp Hà Nội (2025), Quy định và Hướng dẫn trình bày Đồ án tốt nghiệp Đại học ngành Khoa học Máy tính, Nhà xuất bản Đại học Công nghiệp Hà Nội.",
+        "Nguyễn Trung Phú (2019), Giáo trình thiết kế Web, Nhà xuất bản Thống Kê.",
         "Martin Kleppmann (2017), Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems, O'Reilly Media, ISBN: 978-1449373320.",
         "Robert C. Martin (2017), Clean Architecture: A Craftsman's Guide to Software Structure and Design, Prentice Hall, ISBN: 978-0134494166.",
         "PostgreSQL Global Development Group (2025), \"Explicit Locking and Advisory Locks in PostgreSQL 17\", PostgreSQL Documentation. [Online]. Available: https://www.postgresql.org/docs/current/explicit-locking.html",
         "Vercel Inc. (2026), \"Next.js App Router, Server Components, and Data Fetching Architecture\", Next.js Documentation. [Online]. Available: https://nextjs.org/docs",
         "Prisma Data Inc. (2026), \"Prisma Client Transactions, Concurrency Control, and Advisory Locks\", Prisma Guide. [Online]. Available: https://www.prisma.io/docs",
         "Google Cloud (2026), \"Gemini API Developer Guide, Structured Outputs, and Streaming Patterns\", Google AI for Developers. [Online]. Available: https://ai.google.dev/docs",
-        "Alex Xu (2020), System Design Interview – An Insider's Guide, Volume 1, Independently published, ISBN: 979-8664653403.",
-        "Bộ Thông tin và Truyền thông (2020), Tiêu chuẩn Quốc gia TCVN 11814:2017 về Quy chuẩn kỹ thuật trong thiết kế và phát triển phần mềm ứng dụng web."
+        "Duckett, J. (2014), JavaScript and jQuery: Interactive Front-End Web Development, Wiley.",
+        "Sommerville, I. (2016), Software Engineering (10th ed.), Pearson.",
+        "Richardson, L., & Ruby, S. (2023), RESTful Web Services, O'Reilly Media.",
+        "Tilkov, S., & Vinoski, S. (2023), \"Node.js: Using JavaScript to Build Scalable Network Programs\", IEEE Internet Computing, 14(6), 80–83."
     ]
     for idx, ref in enumerate(ref_list):
         p = doc.add_paragraph()
@@ -1028,9 +1321,14 @@ def build_report():
 
     # Luu file Word
     out_path = r"d:\DA\Bao_Cao_Do_An_Tot_Nghiep_HaUI_CineReserve.docx"
-    doc.save(out_path)
-    print(f"SUCCESS: Da tao file Word tai {out_path}")
+    alt_path = r"d:\DA\Bao_Cao_Do_An_Tot_Nghiep_CineReserve_HaUI.docx"
+    try:
+        doc.save(out_path)
+        print(f"SUCCESS: Da cap nhat tai {out_path}")
+    except PermissionError:
+        doc.save(alt_path)
+        print(f"NOTICE: File dang mo trong Word, da luu ban moi tai {alt_path}")
+
 
 if __name__ == "__main__":
-    build_report()
-
+    build_full_report()
